@@ -1,23 +1,26 @@
 import React, { JSX } from 'react';
 import {
-  ScrollView,
-  StyleSheet,
-  TextStyle,
-  View,
-  ViewStyle,
+    ScrollView,
+    StyleSheet,
+    TextStyle,
+    View,
+    ViewStyle,
 } from 'react-native';
 import {
-  Button,
-  Divider,
-  IconButton,
-  Surface,
-  Text,
-  useTheme
+    Button,
+    Divider,
+    IconButton,
+    Surface,
+    Text,
+    useTheme
 } from 'react-native-paper';
 // Types
 interface Step {
   label: string;
   description?: string;
+  icon?: string;
+  activeIcon?: string;
+  completedIcon?: string;
 }
 
 type StepStatus = 'completed' | 'active' | 'inactive';
@@ -96,13 +99,14 @@ const Stepper: React.FC<StepperProps> = ({
   };
 
   const getStepIcon = (status: StepStatus, stepIndex: number): string => {
+    const step = steps[stepIndex];
     if (status === 'completed') {
-      return 'check';
+      return step?.completedIcon || step?.icon || 'check';
     }
-    if (showStepNumbers) {
-      return (stepIndex + 1).toString();
+    if (status === 'active') {
+      return step?.activeIcon || step?.icon || (showStepNumbers ? (stepIndex + 1).toString() : 'record-circle');
     }
-    return 'circle-outline';
+    return step?.icon || (showStepNumbers ? (stepIndex + 1).toString() : 'circle-outline');
   };
 
   const renderHorizontalStepper = (): JSX.Element => (

@@ -1,5 +1,7 @@
+import { CONSTANTS } from '@/app/utils/const';
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import { Button, Surface, Text } from 'react-native-paper';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -35,22 +37,19 @@ export default function HomeScreen() {
           to open developer tools.
         </ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
+      <Surface style={styles.card} elevation={1}>
+        <Text variant="titleMedium" style={styles.cardTitle}>Go Online</Text>
+        <Text variant="bodyMedium" style={styles.cardText}>Start receiving ride requests.</Text>
+        <Button mode="contained" buttonColor={CONSTANTS.theme.primaryColor}>Go Online</Button>
+      </Surface>
+      <Surface style={styles.card} elevation={1}>
+        <Text variant="titleMedium" style={styles.cardTitle}>Incoming Request</Text>
+        <Text variant="bodyMedium" style={styles.cardText}>Customer: Riya • 1.2 km away</Text>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <Button mode="outlined" textColor={CONSTANTS.theme.primaryColor}>Reject</Button>
+          <Button mode="contained" buttonColor={CONSTANTS.theme.primaryColor}>Accept</Button>
+        </View>
+      </Surface>
     </ParallaxScrollView>
   );
 }

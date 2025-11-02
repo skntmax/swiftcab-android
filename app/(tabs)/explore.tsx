@@ -1,12 +1,14 @@
 import { Image } from 'expo-image';
 import { Platform, StyleSheet } from 'react-native';
 
+import { CONSTANTS } from '@/app/utils/const';
 import { Collapsible } from '@/components/Collapsible';
 import { ExternalLink } from '@/components/ExternalLink';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Button, Surface, Text } from 'react-native-paper';
 
 export default function TabTwoScreen() {
   return (
@@ -21,9 +23,13 @@ export default function TabTwoScreen() {
         />
       }>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
+        <ThemedText type="title">Navigate</ThemedText>
       </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
+      <Surface style={styles.card} elevation={1}>
+        <Text variant="titleMedium" style={styles.cardTitle}>Pickup Route</Text>
+        <Text variant="bodyMedium" style={styles.cardText}>2.4 km • 8 mins • Riya</Text>
+        <Button mode="contained" buttonColor={CONSTANTS.theme.primaryColor}>Arrived at pickup</Button>
+      </Surface>
       <Collapsible title="File-based routing">
         <ThemedText>
           This app has two screens:{' '}
@@ -102,6 +108,19 @@ const styles = StyleSheet.create({
     bottom: -90,
     left: -35,
     position: 'absolute',
+  },
+  card: {
+    gap: 8,
+    padding: 12,
+    marginVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+  },
+  cardTitle: {
+    marginBottom: 4,
+  },
+  cardText: {
+    marginBottom: 8,
   },
   titleContainer: {
     flexDirection: 'row',

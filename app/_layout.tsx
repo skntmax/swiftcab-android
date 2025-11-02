@@ -24,75 +24,79 @@ export default function RootLayout() {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      primary: 'tomato',
-      secondary: 'yellow',
+      primary: '#ED8902',
+      secondary: '#111111',
+      background: '#FFF8DC',
+      surface: '#FFFFFF',
+      onPrimary: '#FFFFFF',
+      onSurface: '#111111',
     },
     fonts: {
       ...DefaultTheme.fonts,
       // Override default fonts with your custom fonts
       default: {
         ...DefaultTheme.fonts.default,
-        fontFamily: 'CustomFont-Regular', // Set your default font
+        fontFamily: 'Montserrat-Regular',
       },
       displayLarge: {
         ...DefaultTheme.fonts.displayLarge,
-        fontFamily: 'CustomFont-Bold',
+        fontFamily: 'Montserrat-Regular',
       },
       displayMedium: {
         ...DefaultTheme.fonts.displayMedium,
-        fontFamily: 'CustomFont-Bold',
+        fontFamily: 'Montserrat-Regular',
       },
       displaySmall: {
         ...DefaultTheme.fonts.displaySmall,
-        fontFamily: 'CustomFont-Bold',
+        fontFamily: 'Montserrat-Regular',
       },
       headlineLarge: {
         ...DefaultTheme.fonts.headlineLarge,
-        fontFamily: 'CustomFont-Bold',
+        fontFamily: 'Montserrat-Regular',
       },
       headlineMedium: {
         ...DefaultTheme.fonts.headlineMedium,
-        fontFamily: 'CustomFont-Bold',
+        fontFamily: 'Montserrat-Regular',
       },
       headlineSmall: {
         ...DefaultTheme.fonts.headlineSmall,
-        fontFamily: 'CustomFont-Bold',
+        fontFamily: 'Montserrat-Regular',
       },
       titleLarge: {
         ...DefaultTheme.fonts.titleLarge,
-        fontFamily: 'CustomFont-Bold',
+        fontFamily: 'Montserrat-Regular',
       },
       titleMedium: {
         ...DefaultTheme.fonts.titleMedium,
-        fontFamily: 'CustomFont-Regular',
+        fontFamily: 'Montserrat-Regular',
       },
       titleSmall: {
         ...DefaultTheme.fonts.titleSmall,
-        fontFamily: 'CustomFont-Regular',
+        fontFamily: 'Montserrat-Regular',
       },
       bodyLarge: {
         ...DefaultTheme.fonts.bodyLarge,
-        fontFamily: 'CustomFont-Regular',
+        fontFamily: 'Montserrat-Regular',
       },
       bodyMedium: {
         ...DefaultTheme.fonts.bodyMedium,
-        fontFamily: 'CustomFont-Regular',
+        fontFamily: 'Montserrat-Regular',
       },
       bodySmall: {
         ...DefaultTheme.fonts.bodySmall,
-        fontFamily: 'CustomFont-Regular',
+        fontFamily: 'Montserrat-Regular',
       },
       labelLarge: {
         ...DefaultTheme.fonts.labelLarge,
-        fontFamily: 'CustomFont-Regular',
+        fontFamily: 'Montserrat-Regular',
       },
       labelMedium: {
         ...DefaultTheme.fonts.labelMedium,
-        fontFamily: 'CustomFont-Regular',
+        fontFamily: 'Montserrat-Regular',
       },
       labelSmall: {
         ...DefaultTheme.fonts.labelSmall,
-        fontFamily: 'CustomFont-Regular',
+        fontFamily: 'Montserrat-Regular',
       },
     },
   };

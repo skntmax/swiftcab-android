@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -96,18 +97,12 @@ const MobileVerificationScreen: React.FC = () => {
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={styles.illustrationContainer}>
-        {/* Simple illustration placeholder - you can replace with actual SVG or image */}
         <View style={styles.illustrationBackground}>
-          <View style={styles.scooterContainer}>
-            <View style={styles.scooter} />
-            <View style={styles.wheel1} />
-            <View style={styles.wheel2} />
-          </View>
-          <View style={styles.person} />
-          <View style={styles.phone} />
-          <View style={styles.trafficLight} />
-          <View style={styles.building1} />
-          <View style={styles.building2} />
+          <Image
+            source={require('@/assets/images/react-logo.png')}
+            style={styles.headerImage}
+            resizeMode="contain"
+          />
         </View>
       </View>
       
@@ -310,74 +305,9 @@ const styles = StyleSheet.create({
     bottom: 30,
     left: 30,
   },
-  scooter: {
-    width: 60,
-    height: 30,
-    backgroundColor: '#FFD700',
-    borderRadius: 10,
-  },
-  wheel1: {
-    position: 'absolute',
-    bottom: -10,
-    left: 5,
-    width: 20,
-    height: 20,
-    backgroundColor: '#333',
-    borderRadius: 10,
-  },
-  wheel2: {
-    position: 'absolute',
-    bottom: -10,
-    right: 5,
-    width: 20,
-    height: 20,
-    backgroundColor: '#333',
-    borderRadius: 10,
-  },
-  person: {
-    position: 'absolute',
-    bottom: 40,
-    right: 40,
-    width: 30,
-    height: 50,
-    backgroundColor: '#4CAF50',
-    borderRadius: 15,
-  },
-  phone: {
-    position: 'absolute',
-    top: 40,
-    right: 30,
-    width: 20,
-    height: 35,
-    backgroundColor: '#2196F3',
-    borderRadius: 5,
-  },
-  trafficLight: {
-    position: 'absolute',
-    top: 20,
-    right: 60,
-    width: 8,
-    height: 30,
-    backgroundColor: '#666',
-    borderRadius: 4,
-  },
-  building1: {
-    position: 'absolute',
-    top: 30,
-    left: 20,
-    width: 25,
-    height: 40,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 5,
-  },
-  building2: {
-    position: 'absolute',
-    top: 25,
-    left: 50,
-    width: 20,
-    height: 45,
-    backgroundColor: '#BDBDBD',
-    borderRadius: 5,
+  headerImage: {
+    width: '100%',
+    height: '100%',
   },
   title: {
     fontSize: 28,
