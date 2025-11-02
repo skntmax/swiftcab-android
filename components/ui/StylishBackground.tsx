@@ -2,13 +2,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Svg, {
-    Circle,
-    Defs,
-    G,
-    Path,
-    Polygon,
-    RadialGradient,
-    Stop
+  Circle,
+  Defs,
+  G,
+  Path,
+  Polygon,
+  RadialGradient,
+  Stop
 } from 'react-native-svg';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');

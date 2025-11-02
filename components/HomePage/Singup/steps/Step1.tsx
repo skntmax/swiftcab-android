@@ -1,20 +1,22 @@
+import { useDriverLoginMutation, useVerifyOtpMutation } from '@/app/lib/api/authApi';
+import { setLastLoginPhone } from '@/app/lib/reducers/auth/authSlice';
+import { CONSTANTS } from '@/app/utils/const';
+import AppButton from '@/components/ui/Button/Button';
+import StylishSignupBackground from '@/components/ui/StylishSignupBackground';
+import { TextField } from '@/components/ui/TextField/TextField';
+import { PaperDialog, useDialog } from '@/components/ui/Dialog/PaperDialog';
 import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View
 } from 'react-native';
+import { TextInput as PaperTextInput, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// import AppButton from './AppButton'; // Your existing AppButton component
-// import { theme } from '@/app/_layout';
-import { CONSTANTS } from '@/app/utils/const';
-import AppButton from '@/components/ui/Button/Button';
-import { TextField } from '@/components/ui/TextField/TextField';
+import { useDispatch } from 'react-redux';
 // Form data interface
 interface VerificationForm {
   phoneNumber: string;
@@ -28,10 +30,17 @@ interface Props {
   onVerified?: () => void;
 }
 
-const MobileVerificationScreen: React.FC<Props> = ({ onVerified }) => {
+const MobileVerificationScreen: React.FC<Props> = ({ onVerified, }) => {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [autoVerify, setAutoVerify] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const dispatch = useDispatch();
+  const { visible, config, showDialog, hideDialog } = useDialog();
+
+        
+  // RTK Query mutations
+  const [driverLogin, { isLoading: isLoginLoading, error: loginError }] = useDriverLoginMutation();
+  const [verifyOtp, { isLoading: isOtpLoading, error: otpError }] = useVerifyOtpMutation();
 
   // OTP input refs for focus management
   const otp1Ref = useRef<any>("");
@@ -50,6 +59,7 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified }) => {
     mode: 'onChange',
   });
 
+
   // Watch OTP values for auto-focus
   const otp1 = watch('otp1');
   const otp2 = watch('otp2');
@@ -58,29 +68,66 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified }) => {
 
   // Handle phone number submission
   const handlePhoneSubmit = async (data: VerificationForm) => {
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      setStep('otp');
-    }, 2000);
+    try {
+      const result: any = await driverLogin({
+        phone: data.phoneNumber,
+        userType: 22 // Driver user type
+      }).unwrap();
+
+      if (!result?.error) {
+        setPhoneNumber(data.phoneNumber);
+        dispatch(setLastLoginPhone(data.phoneNumber));
+        setStep('otp');
+        showDialog(
+          'OTP Sent',
+          result?.data,
+          [{ label: 'OK', onPress: () => {} }]
+        );
+      }
+    } catch (error: any) {
+      showDialog(
+        'Login Failed',
+        error.data?.message || 'Something went wrong. Please try again.',
+        [{ label: 'OK', onPress: () => {} }]
+      );
+    }
   };
 
   // Handle OTP verification
   const handleOTPVerify = async (data: VerificationForm) => {
     const otp = `${data.otp1}${data.otp2}${data.otp3}${data.otp4}`;
-    setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      console.log('OTP Verified:', otp);
-      alert('Verification successful!');
-      // Call the onVerified callback to proceed to next step
-      if (onVerified) {
-        onVerified();
+    try {
+      const result:any = await verifyOtp({
+        otp,
+        phone: phoneNumber
+      }).unwrap();
+
+      debugger
+      if (!result?.error) {
+        showDialog(
+          'Verification Successful!',
+          "you have been succesfully varified",
+          [
+            {
+              label: 'Continue',
+              onPress: () => {
+                if (onVerified) {
+                  onVerified();
+                }
+              }
+            }
+          ]
+        );
+ 
       }
-    }, 2000);
+    } catch (error: any) {
+      showDialog(
+        'Verification Failed',
+        error.data?.message || 'Invalid OTP. Please try again.',
+        [{ label: 'OK', onPress: () => {} }]
+      );
+    }
   };
 
   // Handle OTP input change with auto-focus
@@ -107,7 +154,7 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified }) => {
       <View style={styles.illustrationContainer}>
         <View style={styles.illustrationBackground}>
           <Image
-            source={require('@/assets/images/react-logo.png')}
+            source={require('@/assets/images/driver-app.png')}
             style={styles.headerImage}
             resizeMode="contain"
           />
@@ -150,10 +197,10 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified }) => {
       </View>
 
       <AppButton
-        label={isLoading ? "Sending OTP..." : "Proceed"}
+        label={isLoginLoading ? "Sending OTP..." : "Proceed"}
         onPress={handleSubmit(handlePhoneSubmit)}
-        loading={isLoading}
-        disabled={isLoading || !watch('phoneNumber')}
+        loading={isLoginLoading}
+        disabled={isLoginLoading || !watch('phoneNumber')}
         color="#FFD700"
         style={styles.primaryButton}
       />
@@ -173,50 +220,54 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified }) => {
   // Render OTP input step
   const renderOTPStep = () => (
     <View style={styles.formContainer}>
-      <Text style={styles.stepTitle}>Enter OTP</Text>
-      <Text style={styles.stepSubtitle}>
+      <Text variant="headlineMedium" style={styles.stepTitle}>Enter OTP</Text>
+      <Text variant="bodyMedium" style={styles.stepSubtitle}>
         OTP sent to +91 {watch('phoneNumber')}
       </Text>
       
       <View style={styles.otpContainer}>
-        <TextInput
+        <PaperTextInput
           ref={otp1Ref}
-          style={styles.otpInput}
+          mode="outlined"
           value={otp1}
           onChangeText={(value) => handleOTPChange(value, 'otp1', otp2Ref)}
           onKeyPress={({ nativeEvent }) => handleOTPKeyPress(nativeEvent.key, 'otp1')}
           keyboardType="numeric"
           maxLength={1}
+          style={styles.otpInput}
           textAlign="center"
         />
-        <TextInput
+        <PaperTextInput
           ref={otp2Ref}
-          style={styles.otpInput}
+          mode="outlined"
           value={otp2}
           onChangeText={(value) => handleOTPChange(value, 'otp2', otp3Ref)}
           onKeyPress={({ nativeEvent }) => handleOTPKeyPress(nativeEvent.key, 'otp2', otp1Ref)}
           keyboardType="numeric"
           maxLength={1}
+          style={styles.otpInput}
           textAlign="center"
         />
-        <TextInput
+        <PaperTextInput
           ref={otp3Ref}
-          style={styles.otpInput}
+          mode="outlined"
           value={otp3}
           onChangeText={(value) => handleOTPChange(value, 'otp3', otp4Ref)}
           onKeyPress={({ nativeEvent }) => handleOTPKeyPress(nativeEvent.key, 'otp3', otp2Ref)}
           keyboardType="numeric"
           maxLength={1}
+          style={styles.otpInput}
           textAlign="center"
         />
-        <TextInput
+        <PaperTextInput
           ref={otp4Ref}
-          style={styles.otpInput}
+          mode="outlined"
           value={otp4}
           onChangeText={(value) => handleOTPChange(value, 'otp4')}
           onKeyPress={({ nativeEvent }) => handleOTPKeyPress(nativeEvent.key, 'otp4', otp3Ref)}
           keyboardType="numeric"
           maxLength={1}
+          style={styles.otpInput}
           textAlign="center"
         />
       </View>
@@ -232,10 +283,10 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified }) => {
       </TouchableOpacity>
 
       <AppButton
-        label={isLoading ? "Verifying..." : "Proceed"}
+        label={isOtpLoading ? "Verifying..." : "Proceed"}
         onPress={handleSubmit(handleOTPVerify)}
-        loading={isLoading}
-        disabled={isLoading || !otp1 || !otp2 || !otp3 || !otp4}
+        loading={isOtpLoading}
+        disabled={isOtpLoading || !otp1 || !otp2 || !otp3 || !otp4}
         color="#FFD700"
         style={styles.primaryButton}
       />
@@ -269,11 +320,23 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StylishSignupBackground variant="auth">
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {renderHeader()}
         {step === 'phone' ? renderPhoneStep() : renderOTPStep()}
         {renderTerms()}
+      
       </ScrollView>
+      </StylishSignupBackground>
+      
+      {/* Dialog for alerts */}
+      <PaperDialog
+        visible={visible}
+        onDismiss={hideDialog}
+        title={config.title}
+        message={config.message}
+        actions={config.actions}
+      />
     </SafeAreaView>
   );
 };
@@ -368,13 +431,8 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     backgroundColor: '#FFF',
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: '#E0E0E0',
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#333',
   },
   autoVerifyContainer: {
     flexDirection: 'row',

@@ -1,8 +1,7 @@
-import OnboardingFlowScreen from '@/components/onboarding/OnboardingFlowScreen';
 import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { View } from 'react-native';
 import {
   MD3LightTheme as DefaultTheme,
   PaperProvider,
@@ -121,52 +120,11 @@ export default function RootLayout() {
   return (
     <StoreProvider store={store}>
       <PaperProvider theme={theme}>
-        <OnboardingFlowScreen />
-      </PaperProvider>
-    </StoreProvider>
-  );
-}
-
-// Alternative approach: If you want to show a loading screen while fonts load
-export function RootLayoutWithLoadingScreen() {
-  const [loaded, error] = useFonts({
-     'Montserrat-Regular': require('../assets/fonts/Montserrat-VariableFont_wght.ttf'),
-  });
-
-  const theme = {
-    ...DefaultTheme,
-    colors: {
-      ...DefaultTheme.colors,
-      primary: 'tomato',
-      secondary: 'yellow',
-    },
-    fonts: {
-      ...DefaultTheme.fonts,
-      default: {
-        ...DefaultTheme.fonts.default,
-        fontFamily: 'CustomFont-Regular',
-      },
-    },
-  };
-
-  useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, error]);
-
-  if (!loaded && !error) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#fff' }}>
-        {/* You can add a custom loading component here */}
-      </View>
-    );
-  }
-
-  return (
-    <StoreProvider store={store}>
-      <PaperProvider theme={theme}>
-        <OnboardingFlowScreen />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(drawer)" />
+          <Stack.Screen name="(tabs)" />
+        </Stack>
       </PaperProvider>
     </StoreProvider>
   );

@@ -34,8 +34,22 @@ export const useFileUploader = (): UseFileUploaderResult => {
 
     try {
       let fileBlob: Blob;
-      let fileName = config.fileName || `file_${getUniqueString()}`;
+      let fileName = config.fileName;
       let contentType = config.contentType || 'application/octet-stream';
+
+      // Generate filename if not provided
+      if (!fileName) {
+        const extension = config.uri ? config.uri.split('.').pop() || 'jpg' : 'jpg';
+        const baseName = `file_${getUniqueString()}`;
+        fileName = `${baseName}.${extension}`;
+      } else {
+        // If fileName doesn't have unique suffix, add it
+        if (!fileName.includes(getUniqueString().substring(0, 5))) {
+          const extension = fileName.split('.').pop();
+          const baseName = fileName.replace(`.${extension}`, '');
+          fileName = `${baseName}${getUniqueString()}.${extension}`;
+        }
+      }
 
       // Handle different file sources
       if (config.file) {
@@ -68,18 +82,15 @@ export const useFileUploader = (): UseFileUploaderResult => {
           fileBlob = new Blob([byteArray], { type: contentType });
         }
 
-        // Extract file extension and generate filename
-        const extension = config.uri.split('.').pop() || 'jpg';
-        fileName = `${fileName}.${extension}`;
-        
-        // Determine content type based on extension
+        // Determine content type based on extension if not provided
         if (!config.contentType) {
+          const extension = config.uri.split('.').pop()?.toLowerCase() || '';
           const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
           const pdfExtensions = ['pdf'];
           
-          if (imageExtensions.includes(extension.toLowerCase())) {
-            contentType = `image/${extension.toLowerCase() === 'jpg' ? 'jpeg' : extension.toLowerCase()}`;
-          } else if (pdfExtensions.includes(extension.toLowerCase())) {
+          if (imageExtensions.includes(extension)) {
+            contentType = `image/${extension === 'jpg' ? 'jpeg' : extension}`;
+          } else if (pdfExtensions.includes(extension)) {
             contentType = 'application/pdf';
           }
         }
@@ -87,11 +98,12 @@ export const useFileUploader = (): UseFileUploaderResult => {
         throw new Error('No file or URI provided');
       }
 
-      setProgress(20);
+      setProgress(15);
 
       // Step 1: Get presigned URL from backend
-      console.log('🚀 Requesting presigned URL for:', fileName);
-      const presignedResponse = await v1Router.post('master/upload-to-s3', {
+      debugger
+      console.log('🚀 Step 1: Requesting presigned URL for:', fileName);
+      const presignedResponse: any = await v1Router.post('master/upload-to-s3', {
         fileName,
         contentType,
       });
@@ -100,11 +112,13 @@ export const useFileUploader = (): UseFileUploaderResult => {
         throw new Error(presignedResponse.message || 'Failed to get presigned URL');
       }
 
-      const putUrl = presignedResponse.data;
-      setProgress(40);
+      debugger
+      const putUrl = presignedResponse?.data?.data;
+      console.log('✅ Step 1 Complete: Got presigned URL');
+      setProgress(35);
 
       // Step 2: Upload file to S3 using presigned URL
-      console.log('📤 Uploading file to S3...');
+      console.log('📤 Step 2: Uploading file to S3...');
       const uploadResponse = await fetch(putUrl, {
         method: 'PUT',
         body: fileBlob,
@@ -117,21 +131,25 @@ export const useFileUploader = (): UseFileUploaderResult => {
         throw new Error(`S3 upload failed with status ${uploadResponse.status}`);
       }
 
-      setProgress(80);
+      console.log('✅ Step 2 Complete: File uploaded to S3');
+      setProgress(70);
 
       // Step 3: Get the final file URL from backend
-      console.log('🔗 Getting final file URL...');
-      const encodedKey = encodeURIComponent(fileName);
+      console.log('🔗 Step 3: Getting final file URL...');
+      const encodedKey = encodeURI(fileName);
       const fileUrlResponse = await v1Router.get(`master/get-uploaded-file/${encodedKey}`);
 
       if (fileUrlResponse.error || !fileUrlResponse.data) {
         throw new Error(fileUrlResponse.message || 'Failed to get file URL');
       }
 
+      console.log('✅ Step 3 Complete: Got final file URL');
       setProgress(100);
-      console.log('✅ File upload successful:', fileUrlResponse.data);
       
-      return fileUrlResponse.data as string;
+      const finalUrl = fileUrlResponse.data;
+      console.log('🎉 Upload successful! Final URL:', finalUrl);
+      
+      return finalUrl;
 
     } catch (err: any) {
       console.error('❌ File upload failed:', err);

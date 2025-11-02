@@ -3,9 +3,10 @@ import { CONSTANTS } from '@/app/utils/const';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import { Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Button, ProgressBar, Surface, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PaperDialog, useDialog } from '../ui/Dialog/PaperDialog';
 
 export interface DocumentType {
   id: string;
@@ -35,13 +36,14 @@ const DocumentUploadScreen: React.FC<Props> = ({ document, onDocumentUpload, onS
   const [uploadedDoc, setUploadedDoc] = useState<DocumentUpload | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const { uploadFile, loading: uploaderLoading, error: uploaderError, progress } = useFileUploader();
+  const { visible, config, showDialog, hideDialog } = useDialog();
 
   const requestPermissions = async () => {
     const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
     const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (!cameraPermission.granted || !mediaPermission.granted) {
-      Alert.alert(
+      showDialog(
         'Permissions Required',
         'Please grant camera and media library permissions to upload documents.'
       );
@@ -85,6 +87,7 @@ const DocumentUploadScreen: React.FC<Props> = ({ document, onDocumentUpload, onS
   };
 
   const handleFileSelection = async (asset: ImagePicker.ImagePickerAsset) => {
+    debugger
     const doc: DocumentUpload = {
       uri: asset.uri,
       name: `${document.id}_${Date.now()}.jpg`,
@@ -94,41 +97,42 @@ const DocumentUploadScreen: React.FC<Props> = ({ document, onDocumentUpload, onS
     setUploadedDoc(doc);
     
     // Auto-upload immediately after selection
-    await handleRealUpload(asset.uri, doc.name, 'image/jpeg');
+    await handleRealUpload(asset.uri, doc.name, 'image/jpeg', doc);
   };
 
-  const handleRealUpload = async (uri: string, fileName: string, contentType: string) => {
+  
+  const handleRealUpload = async (uri: string, fileName: string, contentType: string, selectedDoc: DocumentUpload) => {
     try {
       setIsUploading(true);
       
-      const uploadedUrl = await uploadFile({
+      const {data:uploadedUrl, errro , message , status}: any = await uploadFile({
         uri,
         fileName,
         contentType,
       });
 
-      if (uploadedUrl && uploadedDoc) {
+      if (uploadedUrl && selectedDoc) {
         const finalDoc: DocumentUpload = {
-          ...uploadedDoc,
+          ...selectedDoc,
           uri: uploadedUrl, // Update with S3 URL
         };
         onDocumentUpload(finalDoc);
       }
     } catch (error: any) {
-      Alert.alert('Upload Failed', error.message || 'Failed to upload document');
+      showDialog('Upload Failed', error.message || 'Failed to upload document');
     } finally {
       setIsUploading(false);
     }
   };
 
   const showImagePickerOptions = () => {
-    Alert.alert(
+    showDialog(
       'Select Image',
       'Choose from where you want to select a document image',
       [
-        { text: 'Camera', onPress: pickImageFromCamera },
-        { text: 'Gallery', onPress: pickImageFromGallery },
-        { text: 'Cancel', style: 'cancel' },
+        { label: 'Camera', onPress: pickImageFromCamera },
+        { label: 'Gallery', onPress: pickImageFromGallery },
+        { label: 'Cancel', onPress: () => {}, style: 'cancel' },
       ]
     );
   };
@@ -262,6 +266,15 @@ const DocumentUploadScreen: React.FC<Props> = ({ document, onDocumentUpload, onS
           )}
         </View>
       </View>
+      
+      {/* Dialog for alerts */}
+      <PaperDialog
+        visible={visible}
+        onDismiss={hideDialog}
+        title={config.title}
+        message={config.message}
+        actions={config.actions}
+      />
     </SafeAreaView>
   );
 };

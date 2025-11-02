@@ -1,8 +1,9 @@
 import { CONSTANTS } from '@/app/utils/const';
 import React, { useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ProgressBar, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PaperDialog, useDialog } from '../ui/Dialog/PaperDialog';
 import DocumentUploadScreen, { DocumentType } from './DocumentUploadScreen';
 
 interface DocumentUpload {
@@ -88,6 +89,7 @@ const REQUIRED_DOCUMENTS: DocumentType[] = [
 const DocumentFlowScreen: React.FC<Props> = ({ onAllDocumentsComplete }) => {
   const [currentDocumentIndex, setCurrentDocumentIndex] = useState(0);
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
+  const { visible, config, showDialog, hideDialog } = useDialog();
 
   const currentDocument = REQUIRED_DOCUMENTS[currentDocumentIndex];
   const progress = (currentDocumentIndex + 1) / REQUIRED_DOCUMENTS.length;
@@ -105,18 +107,18 @@ const DocumentFlowScreen: React.FC<Props> = ({ onAllDocumentsComplete }) => {
     // Move to next document or complete
     if (currentDocumentIndex < REQUIRED_DOCUMENTS.length - 1) {
       setCurrentDocumentIndex(currentDocumentIndex + 1);
-      Alert.alert(
+      showDialog(
         'Document Uploaded!',
         `${currentDocument.name} has been uploaded successfully. Please upload the next document.`
       );
     } else {
       // All documents uploaded
-      Alert.alert(
+      showDialog(
         'All Documents Uploaded!',
         'All required documents have been uploaded successfully. Your documents will be verified within 24-48 hours.',
         [
           {
-            text: 'Continue',
+            label: 'Continue',
             onPress: () => onAllDocumentsComplete(newUploadedDocs),
           },
         ]
@@ -126,7 +128,7 @@ const DocumentFlowScreen: React.FC<Props> = ({ onAllDocumentsComplete }) => {
 
   const handleSkipDocument = () => {
     if (currentDocument.required) {
-      Alert.alert(
+      showDialog(
         'Required Document',
         'This document is required for account verification. You cannot skip it.'
       );
@@ -156,15 +158,21 @@ const DocumentFlowScreen: React.FC<Props> = ({ onAllDocumentsComplete }) => {
           color={CONSTANTS.theme.primaryColor}
           style={styles.progressBar}
         />
-        <Text variant="bodySmall" style={styles.progressSubtitle}>
-          Upload all required documents to complete verification
-        </Text>
       </View>
 
       <DocumentUploadScreen
         document={currentDocument}
         onDocumentUpload={handleDocumentUpload}
         onSkip={currentDocument.required ? undefined : handleSkipDocument}
+      />
+      
+      {/* Dialog for alerts */}
+      <PaperDialog
+        visible={visible}
+        onDismiss={hideDialog}
+        title={config.title}
+        message={config.message}
+        actions={config.actions}
       />
     </SafeAreaView>
   );
@@ -203,5 +211,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+// Wrap the component to include dialog
+const DocumentFlowScreenWrapper: React.FC<Props> = (props) => {
+  return (
+    <>
+      <DocumentFlowScreen {...props} />
+    </>
+  );
+};
 
 export default DocumentFlowScreen;

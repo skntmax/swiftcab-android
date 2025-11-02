@@ -1,0 +1,5 @@
+# Ignore utility files and folders that are not screens
+app/lib/**
+app/utils/**
+app/constants/**
+

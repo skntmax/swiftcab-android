@@ -2,9 +2,10 @@ import { CONSTANTS } from '@/app/utils/const';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Surface, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PaperDialog, useDialog } from '../ui/Dialog/PaperDialog';
 
 interface BankAccountForm {
   bankName: string;
@@ -22,6 +23,7 @@ interface Props {
 
 const BankAccountScreen: React.FC<Props> = ({ onBankInfoComplete }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const { visible, config, showDialog, hideDialog } = useDialog();
 
   const { control, handleSubmit, watch, formState: { errors } } = useForm<BankAccountForm>({
     defaultValues: {
@@ -45,7 +47,7 @@ const BankAccountScreen: React.FC<Props> = ({ onBankInfoComplete }) => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       onBankInfoComplete(data);
     } catch (error) {
-      Alert.alert('Error', 'Failed to save bank account information. Please try again.');
+      showDialog('Error', 'Failed to save bank account information. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -294,6 +296,15 @@ const BankAccountScreen: React.FC<Props> = ({ onBankInfoComplete }) => {
           {isLoading ? 'Saving...' : 'Continue'}
         </Button>
       </ScrollView>
+      
+      {/* Dialog for alerts */}
+      <PaperDialog
+        visible={visible}
+        onDismiss={hideDialog}
+        title={config.title}
+        message={config.message}
+        actions={config.actions}
+      />
     </SafeAreaView>
   );
 };

@@ -1,9 +1,11 @@
 import { CONSTANTS } from '@/app/utils/const';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Button, Card, Surface, Text } from 'react-native-paper';
+import { Card, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AnimatedCard from '../../ui/AnimatedCard';
 import StylishBackground from '../../ui/StylishBackground';
 
 interface DashboardStats {
@@ -43,36 +45,55 @@ const ViewSummaryScreen: React.FC = () => {
   };
 
   const renderEarningsCard = () => (
-    <Card style={styles.card}>
-      <Card.Content>
-        <View style={styles.cardHeader}>
-          <MaterialCommunityIcons name="currency-inr" size={24} color={CONSTANTS.theme.primaryColor} />
-          <Text variant="titleMedium" style={styles.cardTitle}>Earnings Overview</Text>
-        </View>
-        
-        <View style={styles.earningsGrid}>
-          <View style={styles.earningsItem}>
-            <Text variant="headlineSmall" style={styles.earningsAmount}>₹{stats.todayEarnings}</Text>
-            <Text variant="bodySmall" style={styles.earningsLabel}>Today</Text>
+    <AnimatedCard delay={200} style={styles.cardMargin}>
+      <LinearGradient
+        colors={['#ED8902', '#FF9F1C', '#FFB84D']}
+        style={styles.earningsGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <Card.Content>
+          <View style={styles.cardHeader}>
+            <MaterialCommunityIcons name="wallet" size={28} color="white" />
+            <Text variant="titleMedium" style={styles.earningsCardTitle}>Earnings Overview</Text>
           </View>
-          <View style={styles.earningsItem}>
-            <Text variant="headlineSmall" style={styles.earningsAmount}>₹{stats.weeklyEarnings}</Text>
-            <Text variant="bodySmall" style={styles.earningsLabel}>This Week</Text>
+          
+          <View style={styles.earningsGrid}>
+            <View style={styles.earningsItem}>
+              <Text variant="headlineMedium" style={styles.earningsAmount}>₹{stats.todayEarnings}</Text>
+              <Text variant="bodySmall" style={styles.earningsLabelWhite}>Today</Text>
+              <View style={styles.earningsChange}>
+                <MaterialCommunityIcons name="trending-up" size={14} color="#4CAF50" />
+                <Text style={styles.changeText}>+12%</Text>
+              </View>
+            </View>
+            <View style={styles.earningsItem}>
+              <Text variant="headlineMedium" style={styles.earningsAmount}>₹{stats.weeklyEarnings}</Text>
+              <Text variant="bodySmall" style={styles.earningsLabelWhite}>This Week</Text>
+              <View style={styles.earningsChange}>
+                <MaterialCommunityIcons name="trending-up" size={14} color="#4CAF50" />
+                <Text style={styles.changeText}>+8%</Text>
+              </View>
+            </View>
+            <View style={styles.earningsItem}>
+              <Text variant="headlineMedium" style={styles.earningsAmount}>₹{stats.monthlyEarnings}</Text>
+              <Text variant="bodySmall" style={styles.earningsLabelWhite}>This Month</Text>
+              <View style={styles.earningsChange}>
+                <MaterialCommunityIcons name="trending-up" size={14} color="#4CAF50" />
+                <Text style={styles.changeText}>+15%</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.earningsItem}>
-            <Text variant="headlineSmall" style={styles.earningsAmount}>₹{stats.monthlyEarnings}</Text>
-            <Text variant="bodySmall" style={styles.earningsLabel}>This Month</Text>
-          </View>
-        </View>
-      </Card.Content>
-    </Card>
+        </Card.Content>
+      </LinearGradient>
+    </AnimatedCard>
   );
 
   const renderRidesCard = () => (
-    <Card style={styles.card}>
+    <AnimatedCard delay={400} style={styles.cardMargin}>
       <Card.Content>
         <View style={styles.cardHeader}>
-          <MaterialCommunityIcons name="car" size={24} color={CONSTANTS.theme.primaryColor} />
+          <MaterialCommunityIcons name="car-multiple" size={24} color={CONSTANTS.theme.primaryColor} />
           <Text variant="titleMedium" style={styles.cardTitle}>Rides Summary</Text>
         </View>
         
@@ -80,22 +101,31 @@ const ViewSummaryScreen: React.FC = () => {
           <View style={styles.ridesStat}>
             <Text variant="headlineMedium" style={styles.ridesNumber}>{stats.totalRides}</Text>
             <Text variant="bodySmall" style={styles.ridesLabel}>Total Rides</Text>
+            <View style={styles.ridesBadge}>
+              <MaterialCommunityIcons name="chart-line" size={12} color="white" />
+            </View>
           </View>
           <View style={styles.ridesStat}>
             <Text variant="headlineMedium" style={[styles.ridesNumber, { color: '#4CAF50' }]}>{stats.completedRides}</Text>
             <Text variant="bodySmall" style={styles.ridesLabel}>Completed</Text>
+            <View style={[styles.ridesBadge, { backgroundColor: '#4CAF50' }]}>
+              <MaterialCommunityIcons name="check" size={12} color="white" />
+            </View>
           </View>
           <View style={styles.ridesStat}>
             <Text variant="headlineMedium" style={[styles.ridesNumber, { color: '#FF5722' }]}>{stats.cancelledRides}</Text>
             <Text variant="bodySmall" style={styles.ridesLabel}>Cancelled</Text>
+            <View style={[styles.ridesBadge, { backgroundColor: '#FF5722' }]}>
+              <MaterialCommunityIcons name="close" size={12} color="white" />
+            </View>
           </View>
         </View>
       </Card.Content>
-    </Card>
+    </AnimatedCard>
   );
 
   const renderPerformanceCard = () => (
-    <Card style={styles.card}>
+    <AnimatedCard delay={600} style={styles.cardMargin}>
       <Card.Content>
         <View style={styles.cardHeader}>
           <MaterialCommunityIcons name="star" size={24} color={CONSTANTS.theme.primaryColor} />
@@ -113,35 +143,54 @@ const ViewSummaryScreen: React.FC = () => {
           <View style={styles.performanceItem}>
             <Text variant="titleLarge" style={styles.performanceValue}>{stats.onlineHours}h</Text>
             <Text variant="bodySmall" style={styles.performanceLabel}>Online Today</Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: '75%' }]} />
+            </View>
           </View>
         </View>
       </Card.Content>
-    </Card>
+    </AnimatedCard>
   );
 
   const renderOnlineStatusCard = () => (
-    <Surface style={styles.statusCard} elevation={2}>
-      <View style={styles.statusContent}>
-        <View style={styles.statusInfo}>
-          <MaterialCommunityIcons 
-            name={isOnline ? "wifi" : "wifi-off"} 
-            size={24} 
-            color={isOnline ? "#4CAF50" : "#FF5722"} 
-          />
-          <Text variant="titleMedium" style={styles.statusText}>
-            You are {isOnline ? 'Online' : 'Offline'}
-          </Text>
+    <AnimatedCard delay={100} style={styles.cardMargin}>
+      <LinearGradient
+        colors={isOnline ? ['#4CAF50', '#66BB6A'] : ['#F44336', '#EF5350']}
+        style={styles.statusGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+      >
+        <View style={styles.statusContent}>
+          <View style={styles.statusInfo}>
+            <View style={styles.statusIconContainer}>
+              <MaterialCommunityIcons 
+                name={isOnline ? "wifi" : "wifi-off"} 
+                size={24} 
+                color="white" 
+              />
+            </View>
+            <View>
+              <Text variant="titleMedium" style={styles.statusText}>
+                {isOnline ? 'You\'re Online' : 'You\'re Offline'}
+              </Text>
+              <Text variant="bodySmall" style={styles.statusSubtext}>
+                {isOnline ? 'Ready to accept rides' : 'Tap to start receiving rides'}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            onPress={toggleOnlineStatus}
+            style={styles.statusToggle}
+          >
+            <MaterialCommunityIcons 
+              name={isOnline ? "pause" : "play"} 
+              size={20} 
+              color="white" 
+            />
+          </TouchableOpacity>
         </View>
-        <Button
-          mode="contained"
-          onPress={toggleOnlineStatus}
-          buttonColor={isOnline ? "#FF5722" : CONSTANTS.theme.primaryColor}
-          style={styles.statusButton}
-        >
-          {isOnline ? 'Go Offline' : 'Go Online'}
-        </Button>
-      </View>
-    </Surface>
+      </LinearGradient>
+    </AnimatedCard>
   );
 
   const renderQuickActions = () => (
@@ -177,11 +226,23 @@ const ViewSummaryScreen: React.FC = () => {
   return (
     <StylishBackground variant="dashboard">
       <SafeAreaView style={styles.container}>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <View>
+            <Text variant="titleSmall" style={styles.welcomeText}>Welcome back,</Text>
+            <Text variant="headlineSmall" style={styles.driverName}>Driver</Text>
+          </View>
+          <TouchableOpacity style={styles.profileButton}>
+            <MaterialCommunityIcons name="account-circle" size={32} color={CONSTANTS.theme.primaryColor} />
+          </TouchableOpacity>
+        </View>
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
+          showsVerticalScrollIndicator={false}
         >
           {renderOnlineStatusCard()}
           {renderEarningsCard()}
@@ -201,6 +262,100 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 32,
+  },
+  cardMargin: {
+    marginBottom: 16,
+  },
+  earningsGradient: {
+    borderRadius: 16,
+  },
+  earningsCardTitle: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  earningsChange: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  changeText: {
+    color: '#4CAF50',
+    fontSize: 12,
+    fontWeight: '500',
+    marginLeft: 2,
+  },
+  ridesBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: CONSTANTS.theme.primaryColor,
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: 'rgba(237, 137, 2, 0.2)',
+    borderRadius: 2,
+    marginTop: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: CONSTANTS.theme.primaryColor,
+  },
+  statusGradient: {
+    borderRadius: 16,
+    padding: 16,
+  },
+  statusIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  statusSubtext: {
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 2,
+  },
+  statusToggle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(237, 137, 2, 0.1)',
+  },
+  welcomeText: {
+    color: '#666',
+    fontWeight: '400',
+  },
+  driverName: {
+    color: '#333',
+    fontWeight: '700',
+    marginTop: -2,
+  },
+  profileButton: {
+    padding: 8,
   },
   card: {
     marginBottom: 16,
@@ -247,8 +402,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   earningsAmount: {
-    color: CONSTANTS.theme.primaryColor,
+    color: 'white',
     fontWeight: 'bold',
+  },
+  earningsLabelWhite: {
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '500',
   },
   earningsLabel: {
     color: '#666',

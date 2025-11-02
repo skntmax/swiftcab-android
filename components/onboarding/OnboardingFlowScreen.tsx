@@ -1,7 +1,9 @@
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ProgressBar, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PaperDialog, useDialog } from '../ui/Dialog/PaperDialog';
 import StylishBackground from '../ui/StylishBackground';
 
 // Import all onboarding screens
@@ -9,7 +11,6 @@ import { CONSTANTS } from '@/app/utils/const';
 import LocationStep from '../HomePage/Singup/steps/LocationStep';
 import MobileVerificationScreen from '../HomePage/Singup/steps/Step1';
 import LoginScreen from '../auth/LoginScreen';
-import DrawerNavigation from '../navigation/DrawerNavigation';
 import BankAccountScreen from './BankAccountScreen';
 import CitySelectionScreen from './CitySelectionScreen';
 import DocumentFlowScreen from './DocumentFlowScreen';
@@ -99,6 +100,8 @@ const OnboardingFlowScreen: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('location');
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
   const [showLogin, setShowLogin] = useState(false);
+  const { visible, config, showDialog, hideDialog } = useDialog();
+  const router = useRouter();
 
   const getCurrentStepIndex = () => {
     return ONBOARDING_STEPS.findIndex(step => step.step === currentStep);
@@ -113,12 +116,12 @@ const OnboardingFlowScreen: React.FC = () => {
 
   const handlePhoneVerified = () => {
     // Show login option or continue with onboarding
-    Alert.alert(
+    showDialog(
       'Phone Verified!',
       'Would you like to sign in to an existing account or continue with new registration?',
       [
-        { text: 'Sign In', onPress: () => setShowLogin(true) },
-        { text: 'Continue Registration', onPress: () => setCurrentStep('city_selection') },
+        { label: 'Sign In', onPress: () => setShowLogin(true) },
+        { label: 'Continue Registration', onPress: () => setCurrentStep('city_selection') },
       ]
     );
 
@@ -154,12 +157,12 @@ const OnboardingFlowScreen: React.FC = () => {
     setOnboardingData(prev => ({ ...prev, bankAccount }));
     
     // Complete onboarding
-    Alert.alert(
+    showDialog(
       'Welcome to SwiftCab!',
       'Your account has been created successfully. You can start driving once your documents are verified.',
       [
         {
-          text: 'Get Started',
+          label: 'Get Started',
           onPress: () => setCurrentStep('complete'),
         },
       ]
@@ -187,19 +190,33 @@ const OnboardingFlowScreen: React.FC = () => {
     </View>
   );
 
-  // If onboarding is complete, show the main app
+  // If onboarding is complete, navigate to the main app
+  React.useEffect(() => {
+    if (currentStep === 'complete') {
+      // Navigate after component is mounted
+      const timer = setTimeout(() => {
+        router.replace('/(drawer)/(tabs)' as any);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep, router]);
+
   if (currentStep === 'complete') {
-    return <DrawerNavigation />;
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF8DC' }}>
+        <Text variant="headlineSmall">Redirecting to Dashboard...</Text>
+      </View>
+    );
   }
 
   // If showing login screen
   if (showLogin) {
     return (
-      <StylishBackground variant="auth">
-        <SafeAreaView style={styles.container}>
-          <LoginScreen />
-        </SafeAreaView>
-      </StylishBackground>
+      <LoginScreen 
+        onLoginSuccess={handleLoginSuccess}
+        onNavigateToOTP={() => setShowLogin(false)}
+      />
     );
   }
 
@@ -237,6 +254,15 @@ const OnboardingFlowScreen: React.FC = () => {
           <BankAccountScreen onBankInfoComplete={handleBankAccountComplete} />
         )}
       </SafeAreaView>
+      
+      {/* Dialog for alerts */}
+      <PaperDialog
+        visible={visible}
+        onDismiss={hideDialog}
+        title={config.title}
+        message={config.message}
+        actions={config.actions}
+      />
     </StylishBackground>
   );
 };
@@ -248,9 +274,9 @@ const styles = StyleSheet.create({
   progressContainer: {
     padding: 24,
     paddingBottom: 16,
-    backgroundColor: 'white',
+    // backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    // borderBottomColor: '#E0E0E0',
   },
   progressHeader: {
     flexDirection: 'row',
@@ -277,5 +303,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+// Wrap the component to include dialog
+const OnboardingFlowScreenWithDialog: React.FC = () => {
+  return (
+    <>
+      <OnboardingFlowScreen />
+    </>
+  );
+};
 
 export default OnboardingFlowScreen;

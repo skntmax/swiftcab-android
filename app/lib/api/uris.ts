@@ -1,12 +1,4 @@
-export  const CONSTANTS = {
-  theme :{
-  primaryColor:"#ED8902",  // Main background color
-  secondaryColor: "#FFFFFF", // Text / Secondary color
-  textColor: "#111", // Text / Secondary color
-  illustrationUrl: "https://via.placeholder.com/300x200.png?text=Ride+Illustration",
-   },
-
-  urls:{
+export default {
     get_role: "v1/auth/get-all-roles",
     get_vehicles_list: 'v1/admin/get-all-vhicles',
     insert_owner_vhicles: 'v1/owner/insert-owner-vhicles',
@@ -55,17 +47,12 @@ export  const CONSTANTS = {
 
      // socket api 
     "driver_live_location":"driver-live-location"
-  } ,
-  SWC_KEYS : {
-    SWC_TOKEN:"SWC_TOKEN",
-      SWC_USER:"SWC_USER"
-  },
-  KYC_STATUS :{
-    INITIATED:"INITIATED",
-    PENDING:'PENDING',
-    VERIFIED:"VERIFIED",
-    COMPLETED:"COMPLETED"
-  }    
 
 
+}
+
+
+export const extraPathsUrls = {
+    create_permission : "/permission-management/create",
+    edit_permission : "/permission-management/edit",
 }

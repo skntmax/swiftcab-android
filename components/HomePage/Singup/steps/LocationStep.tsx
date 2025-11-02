@@ -1,8 +1,9 @@
 import { CONSTANTS } from '@/app/utils/const';
 import AppButton from '@/components/ui/Button/Button';
+import { PaperDialog, useDialog } from '@/components/ui/Dialog/PaperDialog';
 import * as Location from 'expo-location';
 import React, { useState } from 'react';
-import { Alert, Linking, Platform, StyleSheet, View } from 'react-native';
+import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text, useTheme } from 'react-native-paper';
 
 type Props = {
@@ -14,6 +15,7 @@ const LocationStep: React.FC<Props> = ({ onGranted }) => {
   const [status, setStatus] = useState<Location.PermissionStatus | 'unavailable'>('unavailable');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { visible, config, showDialog, hideDialog } = useDialog();
 
   const requestWebLocation = (): Promise<{ latitude: number; longitude: number }> => {
     return new Promise((resolve, reject) => {
@@ -67,10 +69,10 @@ const LocationStep: React.FC<Props> = ({ onGranted }) => {
           if (webError.message.includes('denied')) {
             setError('Location access was blocked. Please enable location access in your browser settings.');
             // Show instructions for enabling location on web
-            Alert.alert(
+            showDialog(
               'Enable Location Access',
               'To use this feature:\n\n1. Click the location icon (🔒) in your browser address bar\n2. Select "Allow" for location access\n3. Refresh the page and try again',
-              [{ text: 'OK' }]
+              [{ label: 'OK', onPress: () => {} }]
             );
           } else {
             setError(webError.message || 'Failed to get location on web');
@@ -106,10 +108,10 @@ const LocationStep: React.FC<Props> = ({ onGranted }) => {
 
   const openSettings = () => {
     if (Platform.OS === 'web') {
-      Alert.alert(
+      showDialog(
         'Browser Settings',
         'To enable location access:\n\n1. Click the location icon (🔒) in your address bar\n2. Select "Allow" for location\n3. Refresh the page',
-        [{ text: 'OK' }]
+        [{ label: 'OK', onPress: () => {} }]
       );
     } else if (Platform.OS === 'ios') {
       Linking.openURL('app-settings:');
@@ -120,15 +122,15 @@ const LocationStep: React.FC<Props> = ({ onGranted }) => {
 
   const skipForDemo = () => {
     // For demo purposes, use default Mumbai coordinates
-    Alert.alert(
+    showDialog(
       'Demo Mode',
       'Using demo location (Mumbai) for testing purposes.',
       [
         {
-          text: 'Continue',
+          label: 'Continue',
           onPress: () => onGranted({ latitude: 19.0760, longitude: 72.8777 }),
         },
-        { text: 'Cancel', style: 'cancel' }
+        { label: 'Cancel', onPress: () => {}, style: 'cancel' }
       ]
     );
   };
@@ -176,6 +178,15 @@ const LocationStep: React.FC<Props> = ({ onGranted }) => {
       <HelperText type={error ? 'error' : 'info'} visible={!!error}>
         {error}
       </HelperText>
+      
+      {/* Dialog for alerts */}
+      <PaperDialog
+        visible={visible}
+        onDismiss={hideDialog}
+        title={config.title}
+        message={config.message}
+        actions={config.actions}
+      />
     </View>
   );
 };

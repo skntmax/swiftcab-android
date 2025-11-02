@@ -1,45 +1,16 @@
 import { CONSTANTS } from '@/app/utils/const';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { NavigationContainer } from '@react-navigation/native';
+import { DrawerContentScrollView } from '@react-navigation/drawer';
+import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Divider, Surface, Text } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-// Import dashboard screens
-import NotificationsScreen from '../screens/dashboard/NotificationsScreen';
-import ViewSummaryScreen from '../screens/dashboard/ViewSummaryScreen';
-
-// Import earnings screens
-import DailyEarningsScreen from '../screens/earnings/DailyEarningsScreen';
-
-// Import placeholder screens
-import {
-    AllRidesScreen,
-    CancelledRidesScreen,
-    ChangePasswordScreen,
-    CompletedRidesScreen,
-    ContactSupportScreen,
-    DocumentStatusScreen,
-    EditProfileScreen,
-    FAQsScreen,
-    FilterRidesScreen,
-    MonthlyEarningsScreen,
-    PaymentHistoryScreen,
-    UpcomingRidesScreen,
-    UploadDocumentsScreen,
-    ViewDocumentsScreen,
-    ViewProfileScreen,
-} from '../screens/CreatePlaceholderScreens';
-
-const Drawer = createDrawerNavigator();
 
 interface MenuItem {
   id: string;
   title: string;
   icon: string;
-  component: React.ComponentType<any>;
+  route: string;
   permission_id?: number;
 }
 
@@ -58,13 +29,13 @@ const MENU_STRUCTURE: MenuSection[] = [
         id: '1',
         title: 'View Summary',
         icon: 'view-dashboard',
-        component: ViewSummaryScreen,
+        route: '/(tabs)',
       },
       {
         id: '2',
         title: 'Notifications',
         icon: 'bell',
-        component: NotificationsScreen,
+        route: '/(tabs)',
       },
     ],
   },
@@ -76,19 +47,19 @@ const MENU_STRUCTURE: MenuSection[] = [
         id: '3',
         title: 'Upload Documents',
         icon: 'upload',
-        component: UploadDocumentsScreen,
+        route: '/(tabs)',
       },
       {
         id: '4',
         title: 'View Documents',
         icon: 'file-document',
-        component: ViewDocumentsScreen,
+        route: '/(tabs)',
       },
       {
         id: '5',
         title: 'Document Status',
         icon: 'file-search',
-        component: DocumentStatusScreen,
+        route: '/(tabs)',
       },
     ],
   },
@@ -100,19 +71,19 @@ const MENU_STRUCTURE: MenuSection[] = [
         id: '6',
         title: 'Daily Earnings',
         icon: 'currency-inr',
-        component: DailyEarningsScreen,
+        route: '/(tabs)',
       },
       {
         id: '7',
         title: 'Monthly Earnings',
         icon: 'calendar-month',
-        component: MonthlyEarningsScreen,
+        route: '/(tabs)',
       },
       {
         id: '8',
         title: 'Payment History',
         icon: 'history',
-        component: PaymentHistoryScreen,
+        route: '/(tabs)',
       },
     ],
   },
@@ -124,19 +95,19 @@ const MENU_STRUCTURE: MenuSection[] = [
         id: '9',
         title: 'Upcoming Rides',
         icon: 'calendar-clock',
-        component: UpcomingRidesScreen,
+        route: '/(tabs)',
       },
       {
         id: '10',
         title: 'Completed Rides',
         icon: 'check-circle',
-        component: CompletedRidesScreen,
+        route: '/(tabs)',
       },
       {
         id: '11',
         title: 'Cancelled Rides',
         icon: 'cancel',
-        component: CancelledRidesScreen,
+        route: '/(tabs)',
       },
     ],
   },
@@ -148,19 +119,19 @@ const MENU_STRUCTURE: MenuSection[] = [
         id: '12',
         title: 'View Profile',
         icon: 'account',
-        component: ViewProfileScreen,
+        route: '/(tabs)',
       },
       {
         id: '13',
         title: 'Edit Profile',
         icon: 'account-edit',
-        component: EditProfileScreen,
+        route: '/(tabs)',
       },
       {
         id: '14',
         title: 'Change Password',
         icon: 'lock',
-        component: ChangePasswordScreen,
+        route: '/(tabs)',
       },
     ],
   },
@@ -172,13 +143,13 @@ const MENU_STRUCTURE: MenuSection[] = [
         id: '15',
         title: 'All Rides',
         icon: 'format-list-bulleted',
-        component: AllRidesScreen,
+        route: '/(tabs)',
       },
       {
         id: '16',
         title: 'Filter by Date',
         icon: 'filter',
-        component: FilterRidesScreen,
+        route: '/(tabs)',
       },
     ],
   },
@@ -190,26 +161,26 @@ const MENU_STRUCTURE: MenuSection[] = [
         id: '17',
         title: 'Contact Support',
         icon: 'phone',
-        component: ContactSupportScreen,
+        route: '/(tabs)',
       },
       {
         id: '18',
         title: 'FAQs',
         icon: 'help-circle',
-        component: FAQsScreen,
+        route: '/(tabs)',
       },
     ],
   },
 ];
 
-const CustomDrawerContent = (props: any) => {
-  const { navigation } = props;
+export const CustomDrawerContent = (props: any) => {
+  const router = useRouter();
 
   const renderMenuItem = (item: MenuItem) => (
     <TouchableOpacity
       key={item.id}
       style={styles.menuItem}
-      onPress={() => navigation.navigate(item.title)}
+      onPress={() => router.push(item.route as any)}
     >
       <MaterialCommunityIcons
         name={item.icon as any}
@@ -238,7 +209,7 @@ const CustomDrawerContent = (props: any) => {
   );
 
   return (
-    <SafeAreaView style={styles.drawerContainer}>
+    <DrawerContentScrollView {...props} style={styles.drawerContainer}>
       <Surface style={styles.drawerHeader} elevation={2}>
         <View style={styles.headerContent}>
           <MaterialCommunityIcons
@@ -255,9 +226,9 @@ const CustomDrawerContent = (props: any) => {
         </View>
       </Surface>
 
-      <ScrollView style={styles.menuContainer} showsVerticalScrollIndicator={false}>
+      <View style={styles.menuContainer}>
         {MENU_STRUCTURE.map(renderMenuSection)}
-      </ScrollView>
+      </View>
 
       <Surface style={styles.drawerFooter} elevation={1}>
         <TouchableOpacity style={styles.logoutButton}>
@@ -267,50 +238,16 @@ const CustomDrawerContent = (props: any) => {
           </Text>
         </TouchableOpacity>
       </Surface>
-    </SafeAreaView>
+    </DrawerContentScrollView>
   );
 };
 
+// Export menu structure for use in other components
+export { MENU_STRUCTURE };
+
+// This component is not needed anymore as we'll use expo-router's Drawer
 const DrawerNavigation: React.FC = () => {
-  return (
-    <NavigationContainer>
-      <Drawer.Navigator
-        drawerContent={(props) => <CustomDrawerContent {...props} />}
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: CONSTANTS.theme.primaryColor,
-          },
-          headerTintColor: 'white',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-          drawerStyle: {
-            backgroundColor: '#FFF8DC',
-            width: 300,
-          },
-        }}
-      >
-        {MENU_STRUCTURE.map((section) =>
-          section.items.map((item) => (
-            <Drawer.Screen
-              key={item.id}
-              name={item.title}
-              component={item.component}
-              options={{
-                drawerIcon: ({ color }) => (
-                  <MaterialCommunityIcons
-                    name={item.icon as any}
-                    size={22}
-                    color={color}
-                  />
-                ),
-              }}
-            />
-          ))
-        )}
-      </Drawer.Navigator>
-    </NavigationContainer>
-  );
+  return null;
 };
 
 const styles = StyleSheet.create({

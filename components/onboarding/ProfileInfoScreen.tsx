@@ -3,9 +3,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Button, Surface, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PaperDialog, useDialog } from '../ui/Dialog/PaperDialog';
 
 interface ProfileForm {
   firstName: string;
@@ -25,6 +26,7 @@ interface Props {
 const ProfileInfoScreen: React.FC<Props> = ({ onProfileComplete }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { visible, config, showDialog, hideDialog } = useDialog();
 
   const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm<ProfileForm>({
     defaultValues: {
@@ -49,7 +51,7 @@ const ProfileInfoScreen: React.FC<Props> = ({ onProfileComplete }) => {
       await new Promise(resolve => setTimeout(resolve, 1500));
       onProfileComplete(data);
     } catch (error) {
-      Alert.alert('Error', 'Failed to save profile information. Please try again.');
+      showDialog('Error', 'Failed to save profile information. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -301,6 +303,15 @@ const ProfileInfoScreen: React.FC<Props> = ({ onProfileComplete }) => {
           Continue
         </Button>
       </ScrollView>
+      
+      {/* Dialog for alerts */}
+      <PaperDialog
+        visible={visible}
+        onDismiss={hideDialog}
+        title={config.title}
+        message={config.message}
+        actions={config.actions}
+      />
     </SafeAreaView>
   );
 };

@@ -39,8 +39,10 @@ export default {
 
 
      // socket api 
-    "driver_live_location":"driver-live-location"
+    "driver_live_location":"driver-live-location",
 
-
+    // auth api 
+    "auth_login": "/v1/auth/login",
+    "auth_verify_otp": "/v1/auth/verify-otp",
 }
 
