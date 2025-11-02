@@ -34,6 +34,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow SwiftCab Driver to use your location to verify your account and enable accurate pickups while you are driving."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -48,6 +54,7 @@
     },
     "extra": {
       "router": {},
+      "environment": "${EXPO_PUBLIC_ENVIRONMENT}",
       "eas": {
         "projectId": "64d676b0-6d8f-4c26-be93-588c889fd65a"
       }

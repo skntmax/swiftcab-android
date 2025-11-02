@@ -1,13 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import AppButton from './AppButton'; // Your existing AppButton component
@@ -24,7 +24,11 @@ interface VerificationForm {
   otp4: string;
 }
 
-const MobileVerificationScreen: React.FC = () => {
+interface Props {
+  onVerified?: () => void;
+}
+
+const MobileVerificationScreen: React.FC<Props> = ({ onVerified }) => {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [autoVerify, setAutoVerify] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -72,6 +76,10 @@ const MobileVerificationScreen: React.FC = () => {
       setIsLoading(false);
       console.log('OTP Verified:', otp);
       alert('Verification successful!');
+      // Call the onVerified callback to proceed to next step
+      if (onVerified) {
+        onVerified();
+      }
     }, 2000);
   };
 

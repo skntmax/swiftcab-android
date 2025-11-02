@@ -1,4 +1,4 @@
-import Singup from '@/components/HomePage/Singup/Singup';
+import OnboardingFlowScreen from '@/components/onboarding/OnboardingFlowScreen';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
@@ -121,7 +121,7 @@ export default function RootLayout() {
   return (
     <StoreProvider store={store}>
       <PaperProvider theme={theme}>
-        <Singup />
+        <OnboardingFlowScreen />
       </PaperProvider>
     </StoreProvider>
   );
@@ -166,7 +166,7 @@ export function RootLayoutWithLoadingScreen() {
   return (
     <StoreProvider store={store}>
       <PaperProvider theme={theme}>
-        <Singup />
+        <OnboardingFlowScreen />
       </PaperProvider>
     </StoreProvider>
   );
