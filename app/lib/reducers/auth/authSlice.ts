@@ -1,19 +1,23 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { clearAuthData as clearStoredAuthData, saveAuthData } from '../../../utils/storage';
 import { authApi } from '../../api/authApi';
 
 // Types for auth state
 export interface User {
-  id: string;
+  id?: string;
+  username?: string;
   firstName: string;
   lastName: string;
   email?: string;
-  phone: string;
+  phone?: string;
   profilePicture?: string;
-  rating: number;
-  isVerified: boolean;
-  status: 'active' | 'inactive' | 'suspended';
-  userType: number;
-  createdAt: string;
+  avatar?: string | null;
+  roleTypeName?: string;
+  rating?: number;
+  isVerified?: boolean;
+  status?: 'active' | 'inactive' | 'suspended';
+  userType?: number;
+  createdAt?: string;
 }
 
 export interface AuthState {
@@ -50,6 +54,18 @@ const authSlice = createSlice({
       state.refreshToken = refreshToken || null;
       state.isAuthenticated = true;
       state.error = null;
+      
+      // Save to AsyncStorage
+      saveAuthData({
+        token,
+        user: {
+          username: user.username || '',
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          avatar: user.avatar || user.profilePicture || null,
+          roleTypeName: user.roleTypeName || '',
+        },
+      }).catch(err => console.error('Failed to save auth data:', err));
     },
 
     setToken: (state, action: PayloadAction<string>) => {
@@ -64,6 +80,9 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       state.onboardingComplete = false;
+      
+      // Clear from AsyncStorage
+      clearStoredAuthData().catch(err => console.error('Failed to clear auth data:', err));
     },
 
     setError: (state, action: PayloadAction<string>) => {
@@ -119,14 +138,40 @@ const authSlice = createSlice({
       .addMatcher(authApi.endpoints.verifyOtp.matchFulfilled, (state, action) => {
         state.isLoading = false;
         if (action.payload.data) {
-          state.user = action.payload.data.user;
-          state.token = action.payload.data.token;
-          state.isAuthenticated = true;
-          // Check if user is new for onboarding
-          if (action.payload.data.isNewUser) {
-            state.onboardingComplete = false;
-          } else {
-            state.onboardingComplete = true;
+          // Handle new API response format: { data: { token, usersObj } }
+          const responseData = action.payload.data;
+          const token = responseData.token;
+          const usersObj = responseData.usersObj;
+          
+          if (token && usersObj) {
+            state.token = token;
+            state.user = {
+              username: usersObj.username,
+              firstName: usersObj.firstName || '',
+              lastName: usersObj.lastName || '',
+              avatar: usersObj.avatar,
+              roleTypeName: usersObj.roleTypeName,
+            };
+            state.isAuthenticated = true;
+            
+            // Save to AsyncStorage
+            saveAuthData({
+              token,
+              user: {
+                username: usersObj.username,
+                firstName: usersObj.firstName || '',
+                lastName: usersObj.lastName || '',
+                avatar: usersObj.avatar,
+                roleTypeName: usersObj.roleTypeName,
+              },
+            }).catch(err => console.error('Failed to save auth data:', err));
+            
+            // Check if user is new for onboarding
+            if (action.payload.data.isNewUser) {
+              state.onboardingComplete = false;
+            } else {
+              state.onboardingComplete = true;
+            }
           }
         }
       })
@@ -143,6 +188,9 @@ const authSlice = createSlice({
         state.refreshToken = null;
         state.isAuthenticated = false;
         state.onboardingComplete = false;
+        
+        // Clear from AsyncStorage
+        clearStoredAuthData().catch(err => console.error('Failed to clear auth data:', err));
       });
 
     // Get Current User

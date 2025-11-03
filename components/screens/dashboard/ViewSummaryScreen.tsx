@@ -1,3 +1,4 @@
+import { selectCurrentUser } from '@/app/lib/reducers/auth/authSlice';
 import { CONSTANTS } from '@/app/utils/const';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -5,6 +6,7 @@ import React, { useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Card, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSelector } from 'react-redux';
 import AnimatedCard from '../../ui/AnimatedCard';
 import StylishBackground from '../../ui/StylishBackground';
 
@@ -21,6 +23,7 @@ interface DashboardStats {
 
 const ViewSummaryScreen: React.FC = () => {
   const [isOnline, setIsOnline] = useState(false);
+  const currentUser = useSelector(selectCurrentUser);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     todayEarnings: 450,
@@ -230,10 +233,20 @@ const ViewSummaryScreen: React.FC = () => {
         <View style={styles.header}>
           <View>
             <Text variant="titleSmall" style={styles.welcomeText}>Welcome back,</Text>
-            <Text variant="headlineSmall" style={styles.driverName}>Driver</Text>
+            <Text variant="headlineSmall" style={styles.driverName}>
+              {currentUser?.firstName || currentUser?.username || 'Driver'}
+            </Text>
           </View>
           <TouchableOpacity style={styles.profileButton}>
-            <MaterialCommunityIcons name="account-circle" size={32} color={CONSTANTS.theme.primaryColor} />
+            {currentUser?.avatar ? (
+              <View style={styles.avatarContainer}>
+                <Text style={styles.avatarText}>
+                  {(currentUser.firstName?.[0] || currentUser.username?.[0] || 'D').toUpperCase()}
+                </Text>
+              </View>
+            ) : (
+              <MaterialCommunityIcons name="account-circle" size={32} color={CONSTANTS.theme.primaryColor} />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -356,6 +369,19 @@ const styles = StyleSheet.create({
   },
   profileButton: {
     padding: 8,
+  },
+  avatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: CONSTANTS.theme.primaryColor,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   card: {
     marginBottom: 16,

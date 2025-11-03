@@ -1,6 +1,7 @@
 import { useFileUploader } from '@/app/lib/hooks/useFileUploader';
 import { CONSTANTS } from '@/app/utils/const';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -24,6 +25,7 @@ interface DocumentUpload {
   name: string;
   type: string;
   size: number;
+  mimeType?: string;
 }
 
 interface Props {
@@ -86,13 +88,38 @@ const DocumentUploadScreen: React.FC<Props> = ({ document, onDocumentUpload, onS
     }
   };
 
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'application/pdf'],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const asset = result.assets[0];
+        const doc: DocumentUpload = {
+          uri: asset.uri,
+          name: asset.name || `${document.id}_${Date.now()}.pdf`,
+          type: asset.mimeType || 'application/pdf',
+          size: asset.size || 0,
+          mimeType: asset.mimeType,
+        };
+        setUploadedDoc(doc);
+        // Auto-upload immediately after selection
+        await handleRealUpload(asset.uri, doc.name, doc.type, doc);
+      }
+    } catch (error: any) {
+      showDialog('Error', error.message || 'Failed to pick document');
+    }
+  };
+
   const handleFileSelection = async (asset: ImagePicker.ImagePickerAsset) => {
-    debugger
     const doc: DocumentUpload = {
       uri: asset.uri,
       name: `${document.id}_${Date.now()}.jpg`,
       type: 'image/jpeg',
       size: asset.fileSize || 0,
+      mimeType: 'image/jpeg',
     };
     setUploadedDoc(doc);
     
@@ -117,9 +144,19 @@ const DocumentUploadScreen: React.FC<Props> = ({ document, onDocumentUpload, onS
           uri: uploadedUrl, // Update with S3 URL
         };
         onDocumentUpload(finalDoc);
+        
+        // Clear the uploaded document from screen after successful upload
+        setTimeout(() => {
+          setUploadedDoc(null);
+          showDialog(
+            'Upload Successful! 🎉', 
+            `${document.name} has been uploaded successfully. You can now upload another document if needed.`
+          );
+        }, 500);
       }
     } catch (error: any) {
       showDialog('Upload Failed', error.message || 'Failed to upload document');
+      // Don't clear the document on error so user can retry
     } finally {
       setIsUploading(false);
     }
@@ -127,11 +164,12 @@ const DocumentUploadScreen: React.FC<Props> = ({ document, onDocumentUpload, onS
 
   const showImagePickerOptions = () => {
     showDialog(
-      'Select Image',
-      'Choose from where you want to select a document image',
+      'Select Document',
+      'Choose how you want to upload your document',
       [
-        { label: 'Camera', onPress: pickImageFromCamera },
-        { label: 'Gallery', onPress: pickImageFromGallery },
+        { label: '📸 Camera', onPress: pickImageFromCamera },
+        { label: '🖼️ Gallery', onPress: pickImageFromGallery },
+        { label: '📄 Browse Files', onPress: pickDocument },
         { label: 'Cancel', onPress: () => {}, style: 'cancel' },
       ]
     );
@@ -150,14 +188,32 @@ const DocumentUploadScreen: React.FC<Props> = ({ document, onDocumentUpload, onS
     >
       {uploadedDoc ? (
         <View style={styles.documentPreview}>
-          <Image source={{ uri: uploadedDoc.uri }} style={styles.previewImage} />
+          {/* Show preview based on file type */}
+          {uploadedDoc.mimeType?.startsWith('image/') ? (
+            <Image source={{ uri: uploadedDoc.uri }} style={styles.previewImage} />
+          ) : uploadedDoc.mimeType === 'application/pdf' ? (
+            <View style={styles.pdfPreview}>
+              <MaterialCommunityIcons name="file-pdf-box" size={48} color="#FF5252" />
+              <Text variant="bodySmall" style={styles.pdfText}>PDF Document</Text>
+            </View>
+          ) : (
+            <View style={styles.pdfPreview}>
+              <MaterialCommunityIcons name="file-document" size={48} color={CONSTANTS.theme.primaryColor} />
+              <Text variant="bodySmall" style={styles.pdfText}>Document</Text>
+            </View>
+          )}
           <View style={styles.documentInfo}>
-            <Text variant="bodyMedium" style={styles.documentName}>
+            <Text variant="bodyMedium" style={styles.documentName} numberOfLines={1}>
               {uploadedDoc.name}
             </Text>
             <Text variant="bodySmall" style={styles.documentSize}>
               Size: {(uploadedDoc.size / (1024 * 1024)).toFixed(2)} MB
             </Text>
+            {uploadedDoc.mimeType && (
+              <Text variant="bodySmall" style={styles.documentType}>
+                Type: {uploadedDoc.mimeType}
+              </Text>
+            )}
           </View>
           <TouchableOpacity onPress={removeDocument} style={styles.removeButton}>
             <MaterialCommunityIcons name="close-circle" size={24} color="#FF5252" />
@@ -361,6 +417,19 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 8,
   },
+  pdfPreview: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pdfText: {
+    fontSize: 8,
+    color: '#666',
+    marginTop: 2,
+  },
   documentInfo: {
     flex: 1,
     marginLeft: 16,
@@ -372,6 +441,11 @@ const styles = StyleSheet.create({
   documentSize: {
     color: '#666',
     marginTop: 4,
+  },
+  documentType: {
+    color: '#999',
+    marginTop: 2,
+    fontSize: 11,
   },
   removeButton: {
     padding: 4,

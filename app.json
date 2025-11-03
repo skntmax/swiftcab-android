@@ -1,17 +1,23 @@
 {
   "expo": {
-    "name": "expo_app",
-    "slug": "expo_app",
+    "name": "swiftcab-driver-app",
+    "slug": "swiftcab-driver-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "expoapp",
+    "scheme": "swiftcab",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.swiftcab.driver",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "We use your location to verify your account and enable accurate pickups while you are online."
+        "NSLocationWhenInUseUsageDescription": "SwiftCab needs your location to show nearby rides and navigate.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "SwiftCab needs your location to track rides and provide navigation."
       }
     },
     "android": {
@@ -19,12 +25,17 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.skntmax.expo_app",
+      "package": "com.swiftcab.driver",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
-      ]
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDummyKeyPleaseReplaceWithYourOwnKey"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -36,16 +47,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow SwiftCab Driver to use your location to verify your account and enable accurate pickups while you are driving."
-        }
-      ],
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "locationAlwaysAndWhenInUsePermission": "Allow SwiftCab to use your location for ride navigation."
         }
       ]
     ],
@@ -53,15 +55,12 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {},
-      "environment": "${EXPO_PUBLIC_ENVIRONMENT}",
+      "router": {
+        "origin": false
+      },
       "eas": {
-        "projectId": "64d676b0-6d8f-4c26-be93-588c889fd65a"
+        "projectId": "your-project-id"
       }
-    },
-     "assetBundlePatterns": [
-      "**/*",
-      "assets/fonts/*"
-    ]
+    }
   }
 }
