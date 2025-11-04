@@ -17,7 +17,7 @@ interface EnvironmentConfig {
 }
 
 // Get environment from Expo config or fallback to development
-const environment: Environment = (Constants.expoConfig?.extra?.environment as Environment) || 'development';
+const environment: Environment = (Constants.expoConfig?.extra?.environment as Environment) || 'production';
 
 // Environment-specific configuration
 const config: Record<Environment, EnvironmentConfig> = {

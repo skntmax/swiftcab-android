@@ -347,6 +347,23 @@ export const LiveOlaMapView: React.FC<LiveOlaMapViewProps> = ({
           const { nativeEvent } = syntheticEvent;
           console.error('WebView error: ', nativeEvent);
         }}
+        onShouldStartLoadWithRequest={(request) => {
+          // Only allow data URLs and blob URLs (block external navigation)
+          const url = request.url;
+          if (url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('about:')) {
+            return true;
+          }
+          // Block any external URLs (like Google search)
+          if (url.includes('google.com') || url.includes('http')) {
+            console.warn('Blocked external navigation:', url);
+            return false;
+          }
+          return true;
+        }}
+        originWhitelist={['data:', 'blob:', 'about:']}
+        allowsBackForwardNavigationGestures={false}
+        allowsInlineMediaPlayback={true}
+        mediaPlaybackRequiresUserAction={false}
       />
     </View>
   );
