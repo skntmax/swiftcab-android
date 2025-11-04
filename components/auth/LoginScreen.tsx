@@ -1,8 +1,9 @@
-import { useDriverLoginMutation } from '@/app/lib/api';
+import { useEmailLoginMutation } from '@/app/lib/api';
 import { CONSTANTS } from '@/app/utils/const';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
+import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
   ScrollView,
@@ -10,13 +11,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Surface, TextInput, Text, HelperText, Button, ActivityIndicator } from 'react-native-paper';
+import { HelperText, Surface, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import StylishBackground from '../ui/StylishBackground';
 import { PaperDialog, useDialog } from '../ui/Dialog/PaperDialog';
+import StylishBackground from '../ui/StylishBackground';
 
 interface LoginForm {
-  email: string;
+  emailOrUsername: string;
   password: string;
 }
 
@@ -27,29 +28,42 @@ interface Props {
 
 const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onNavigateToOTP }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [driverLogin, { isLoading }] = useDriverLoginMutation();
+  const [emailLogin, { isLoading, isSuccess, error }] = useEmailLoginMutation();
   const { visible, config, showDialog, hideDialog } = useDialog();
 
   const { control, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     defaultValues: {
-      email: '',
+      emailOrUsername: '',
       password: '',
     },
   });
 
+  // Redirect to Summary page after successful login
+  useEffect(() => {
+    if (isSuccess) {
+      // Navigate to drawer/tabs (Summary screen)
+      router.replace('/(drawer)/(tabs)');
+    }
+  }, [isSuccess]);
+
   const handleEmailLogin = async (data: LoginForm) => {
     try {
-      // For now, simulate email login - you can implement this endpoint later
-      showDialog(
-        'Email Login',
-        'Email login will be implemented. Use OTP login for now.',
-        [
-          { label: 'Use OTP', onPress: () => onNavigateToOTP?.() },
-          { label: 'Cancel', onPress: () => {}, style: 'cancel' }
-        ]
-      );
-    } catch (error) {
-      showDialog('Login Failed', 'Invalid credentials');
+      const result = await emailLogin({
+        emailOrUsername: data.emailOrUsername,
+        password: data.password,
+        userType: 22,
+      }).unwrap();
+      
+      console.log('✅ Login successful:', result.message);
+      
+      // Show success message
+      showDialog('Login Successful', result.message || 'Welcome back!');
+      
+      // onLoginSuccess will be called automatically by useEffect when isSuccess becomes true
+    } catch (err: any) {
+      console.error('❌ Login error:', err);
+      const errorMessage = err?.data?.message || err?.message || 'Invalid email/username or password';
+      showDialog('Login Failed', errorMessage);
     }
   };
 
@@ -128,35 +142,30 @@ const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onNavigateToOTP }) => {
 
           {/* Email/Password Form */}
           <View style={styles.formSection}>
-            {/* Email Input */}
+            {/* Email/Username Input */}
             <View style={styles.inputGroup}>
               <Controller
                 control={control}
-                name="email"
+                name="emailOrUsername"
                 rules={{
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Invalid email address'
-                  }
+                  required: 'Email or username is required',
                 }}
                 render={({ field: { onChange, onBlur, value } }) => (
                   <>
                     <TextInput
                       mode="outlined"
-                      label="Email address"
-                      placeholder="Enter your email"
+                      label="Email or Username"
+                      placeholder="Enter email or username"
                       value={value}
                       onBlur={onBlur}
                       onChangeText={onChange}
-                      keyboardType="email-address"
                       autoCapitalize="none"
-                      error={!!errors.email}
-                      left={<TextInput.Icon icon="email" />}
+                      error={!!errors.emailOrUsername}
+                      left={<TextInput.Icon icon="account" />}
                       style={styles.textInput}
                     />
-                    <HelperText type="error" visible={!!errors.email}>
-                      {errors.email?.message}
+                    <HelperText type="error" visible={!!errors.emailOrUsername}>
+                      {errors.emailOrUsername?.message}
                     </HelperText>
                   </>
                 )}
@@ -171,7 +180,7 @@ const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onNavigateToOTP }) => {
                 rules={{
                   required: 'Password is required',
                   minLength: {
-                    value: 6,
+                    value: 3,
                     message: 'Password must be at least 6 characters'
                   }
                 }}

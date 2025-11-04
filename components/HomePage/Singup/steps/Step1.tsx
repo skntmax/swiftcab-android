@@ -2,9 +2,9 @@ import { useDriverLoginMutation, useVerifyOtpMutation } from '@/app/lib/api/auth
 import { setLastLoginPhone } from '@/app/lib/reducers/auth/authSlice';
 import { CONSTANTS } from '@/app/utils/const';
 import AppButton from '@/components/ui/Button/Button';
+import { PaperDialog, useDialog } from '@/components/ui/Dialog/PaperDialog';
 import StylishSignupBackground from '@/components/ui/StylishSignupBackground';
 import { TextField } from '@/components/ui/TextField/TextField';
-import { PaperDialog, useDialog } from '@/components/ui/Dialog/PaperDialog';
 import React, { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
@@ -28,9 +28,10 @@ interface VerificationForm {
 
 interface Props {
   onVerified?: () => void;
+  showLoginPage?: () => void;
 }
 
-const MobileVerificationScreen: React.FC<Props> = ({ onVerified, }) => {
+const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }) => {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [autoVerify, setAutoVerify] = useState(true);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -209,7 +210,7 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, }) => {
       
       <AppButton
         label="Sign in"
-        onPress={() => console.log('Sign in pressed')}
+        onPress={() => showLoginPage?.()}
         mode="contained"
         color="#FFD700"
         style={styles.primaryButton}

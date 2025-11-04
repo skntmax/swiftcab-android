@@ -153,6 +153,8 @@ const OnboardingFlowScreen: React.FC = () => {
     setCurrentStep('bank_account');
   };
 
+  
+
   const handleBankAccountComplete = (bankAccount: BankAccountForm) => {
     setOnboardingData(prev => ({ ...prev, bankAccount }));
     
@@ -167,6 +169,10 @@ const OnboardingFlowScreen: React.FC = () => {
         },
       ]
     );
+  };
+
+  const showLoginPage = () => {
+    setShowLogin(true);
   };
 
   const renderProgressHeader = () => (
@@ -231,7 +237,7 @@ const OnboardingFlowScreen: React.FC = () => {
         )}
         
          {currentStep === 'phone_verification' && (
-           <MobileVerificationScreen onVerified={handlePhoneVerified} />
+           <MobileVerificationScreen onVerified={handlePhoneVerified} showLoginPage={showLoginPage} />
          )}
         
         {currentStep === 'city_selection' && (

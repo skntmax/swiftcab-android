@@ -2,13 +2,39 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { LogBox } from 'react-native';
 import {
   MD3LightTheme as DefaultTheme,
   PaperProvider,
 } from 'react-native-paper';
 import 'react-native-reanimated';
 import { Provider as StoreProvider } from 'react-redux';
+import { SocketProvider } from './contexts/SocketProvider';
 import { store } from './lib/store';
+
+// Suppress specific warnings that come from libraries and expo-router
+LogBox.ignoreLogs([
+  'props.pointerEvents is deprecated',
+  'Sending `onAnimatedValueUpdate` with no listeners registered',
+  'shadow*',
+  'Route ".',
+  'is missing the required default export',
+]);
+
+// Suppress console.warn for specific patterns (more aggressive)
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  const message = args.join(' ');
+  if (
+    message.includes('pointerEvents') ||
+    message.includes('shadow*') ||
+    message.includes('missing the required default export') ||
+    message.includes('Route ".')
+  ) {
+    return;
+  }
+  originalWarn(...args);
+};
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -119,13 +145,15 @@ export default function RootLayout() {
 
   return (
     <StoreProvider store={store}>
-      <PaperProvider theme={theme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(drawer)" />
-          <Stack.Screen name="(tabs)" />
-        </Stack>
-      </PaperProvider>
+      <SocketProvider>
+        <PaperProvider theme={theme}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(drawer)" />
+            <Stack.Screen name="(tabs)" />
+          </Stack>
+        </PaperProvider>
+      </SocketProvider>
     </StoreProvider>
   );
 }

@@ -2,15 +2,14 @@ import { all_env } from '@/app/utils/env';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import urls from './../../utils/urls';
 
-const { NEXT_PUBLIC_API_URL } = all_env;
-console.log("NEXT_PUBLIC_API_URL", NEXT_PUBLIC_API_URL)
+const { API_URL } = all_env;
 // Define the base API
 export const usersApi = createApi({
   reducerPath: 'usersApi',
   tagTypes: ['user-types', 'register-user', 'login-user'],
 
   baseQuery: fetchBaseQuery({
-    baseUrl: NEXT_PUBLIC_API_URL,
+    baseUrl: API_URL,
     // Uncomment for auth headers
     // prepareHeaders: (headers) => {
     //   headers.set('Authorization', `Bearer ${your_token_here}`);

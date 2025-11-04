@@ -129,6 +129,50 @@ const authSlice = createSlice({
         state.error = action.error.message || 'Login failed';
       });
 
+    // Email/Password Login
+    builder
+      .addMatcher(authApi.endpoints.emailLogin.matchPending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addMatcher(authApi.endpoints.emailLogin.matchFulfilled, (state, action) => {
+        state.isLoading = false;
+        if (action.payload.data) {
+          const responseData = action.payload.data;
+          const token = responseData.token;
+          const usersObj = responseData.usersObj;
+          
+          if (token && usersObj) {
+            state.token = token;
+            state.user = {
+              username: usersObj.username,
+              firstName: usersObj.firstName || '',
+              lastName: usersObj.lastName || '',
+              avatar: usersObj.avatar,
+              roleTypeName: usersObj.roleTypeName,
+            };
+            state.isAuthenticated = true;
+            state.onboardingComplete = true; // Email login users are already registered
+            
+            // Save to AsyncStorage
+            saveAuthData({
+              token,
+              user: {
+                username: usersObj.username,
+                firstName: usersObj.firstName || '',
+                lastName: usersObj.lastName || '',
+                avatar: usersObj.avatar,
+                roleTypeName: usersObj.roleTypeName,
+              },
+            }).catch(err => console.error('Failed to save auth data:', err));
+          }
+        }
+      })
+      .addMatcher(authApi.endpoints.emailLogin.matchRejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Email login failed';
+      });
+
     // Verify OTP
     builder
       .addMatcher(authApi.endpoints.verifyOtp.matchPending, (state) => {

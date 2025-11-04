@@ -8,6 +8,7 @@ interface EnvironmentConfig {
   CLIENT_PORTAL_URL: string;
   CLIENT_COOKIE_PORTAL: string;
   CLIENT_MEDIUM_URL: string;
+  SOCKET_URL: string;
   API_ENCRYPT: boolean;
   OLA_API_URL: string;
   OLA_MAP_KEY: string;
@@ -25,6 +26,7 @@ const config: Record<Environment, EnvironmentConfig> = {
     CLIENT_PORTAL_URL: 'http://localhost:3001/callback',
     CLIENT_COOKIE_PORTAL: 'http://localhost:3001',
     CLIENT_MEDIUM_URL: 'http://localhost:7001',
+    SOCKET_URL: 'http://localhost:7001',
     API_ENCRYPT: false,
     OLA_API_URL: 'https://api.olamaps.io',
     OLA_MAP_KEY: 'TmEEWGRULBa01UTDqFDzn7plIxDHJqn2QaMWzBoR',
@@ -36,6 +38,7 @@ const config: Record<Environment, EnvironmentConfig> = {
     CLIENT_PORTAL_URL: 'https://swiftcab-client.365itsolution.com/callback',
     CLIENT_COOKIE_PORTAL: 'https://swiftcab-client.365itsolution.com',
     CLIENT_MEDIUM_URL: 'https://swiftcab-medium.365itsolution.com',
+    SOCKET_URL: 'https://swiftcab-medium.365itsolution.com',
     API_ENCRYPT: true,
     OLA_API_URL: 'https://api.olamaps.io',
     OLA_MAP_KEY: 'TmEEWGRULBa01UTDqFDzn7plIxDHJqn2QaMWzBoR',
@@ -51,6 +54,7 @@ const temp_env = {
   CLIENT_PORTAL_URL: currentConfig.CLIENT_PORTAL_URL,
   CLIENT_COOKIE_PORTAL: currentConfig.CLIENT_COOKIE_PORTAL,
   CLIENT_MEDIUM_URL: currentConfig.CLIENT_MEDIUM_URL,
+  SOCKET_URL: currentConfig.SOCKET_URL,
   API_ENCRYPT: currentConfig.API_ENCRYPT,
   ENVIRONMENT: environment,
   OLA_API_URL: currentConfig.OLA_API_URL,
