@@ -203,24 +203,24 @@ export default function AcceptRideModal({
           
           {/* Compact Info */}
           <View style={styles.compactInfo}>
-            <View style={styles.compactItem}>
-              <MaterialCommunityIcons name="map" size={14} color="#666" />
-              <Text variant="bodySmall" style={styles.compactText}>
-                {customer.distance ? `${customer.distance.toFixed(1)} km` : 'N/A'}
-              </Text>
-            </View>
-            <View style={styles.compactItem}>
-              <MaterialCommunityIcons name="clock-outline" size={14} color="#666" />
-              <Text variant="bodySmall" style={styles.compactText}>
-                {customer.pickup_time || 'Not specified'}
-              </Text>
-            </View>
-            <View style={styles.compactItem}>
-              <MaterialCommunityIcons name="swap-horizontal" size={14} color="#666" />
-              <Text variant="bodySmall" style={styles.compactText}>
-                {customer.travel_way === '1' ? 'One Way' : 'Round'}
-              </Text>
-            </View>
+              <View style={styles.compactItem}>
+                <MaterialCommunityIcons name="map" size={14} color="#000000" />
+                <Text variant="bodySmall" style={styles.compactText}>
+                  {customer.distance ? `${customer.distance.toFixed(1)} km` : 'N/A'}
+                </Text>
+              </View>
+              <View style={styles.compactItem}>
+                <MaterialCommunityIcons name="clock-outline" size={14} color="#000000" />
+                <Text variant="bodySmall" style={styles.compactText}>
+                  {customer.pickup_time || 'Not specified'}
+                </Text>
+              </View>
+              <View style={styles.compactItem}>
+                <MaterialCommunityIcons name="swap-horizontal" size={14} color="#000000" />
+                <Text variant="bodySmall" style={styles.compactText}>
+                  {customer.travel_way === '1' ? 'One Way' : 'Round'}
+                </Text>
+              </View>
           </View>
         </Card.Content>
 
@@ -360,7 +360,8 @@ const styles = StyleSheet.create({
   },
   compactText: {
     fontSize: 11,
-    color: '#666',
+    color: '#000000',
+    fontWeight: '700',
   },
   infoRow: {
     flexDirection: 'row',
@@ -375,14 +376,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoLabel: {
-    color: '#666',
+    color: '#333333',
     fontSize: 10,
     textTransform: 'uppercase',
     marginBottom: 2,
+    fontWeight: '700',
   },
   infoValue: {
-    color: '#333',
+    color: '#000000',
     fontSize: 13,
+    fontWeight: '700',
   },
   actions: {
     justifyContent: 'space-between',

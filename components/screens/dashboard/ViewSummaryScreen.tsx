@@ -915,9 +915,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   locationText: {
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255,255,255,0.95)',
     fontSize: 11,
     marginLeft: 6,
+    fontWeight: '600',
   },
   statusToggle: {
     width: 44,
@@ -942,11 +943,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   welcomeText: {
-    color: '#666',
-    fontWeight: '400',
+    color: '#333333',
+    fontWeight: '600',
   },
   driverName: {
-    color: '#333',
+    color: '#000000',
     fontWeight: '700',
     marginTop: -2,
   },
@@ -977,8 +978,8 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     marginLeft: 8,
-    color: '#333',
-    fontWeight: '600',
+    color: '#000000',
+    fontWeight: '700',
   },
   statusCard: {
     backgroundColor: 'white',
@@ -997,7 +998,8 @@ const styles = StyleSheet.create({
   },
   statusText: {
     marginLeft: 12,
-    color: '#333',
+    color: '#000000',
+    fontWeight: '600',
   },
   statusButton: {
     paddingHorizontal: 20,
@@ -1013,14 +1015,16 @@ const styles = StyleSheet.create({
   earningsAmount: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: 24,
   },
   earningsLabelWhite: {
-    color: 'rgba(255,255,255,0.9)',
-    fontWeight: '500',
+    color: 'rgba(255,255,255,1)',
+    fontWeight: '700',
   },
   earningsLabel: {
-    color: '#666',
+    color: '#333333',
     marginTop: 4,
+    fontWeight: '600',
   },
   ridesGrid: {
     flexDirection: 'row',
@@ -1030,12 +1034,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   ridesNumber: {
-    color: '#333',
+    color: '#000000',
     fontWeight: 'bold',
+    fontSize: 24,
   },
   ridesLabel: {
-    color: '#666',
+    color: '#333333',
     marginTop: 4,
+    fontWeight: '600',
   },
   performanceGrid: {
     flexDirection: 'row',
@@ -1050,16 +1056,19 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     marginLeft: 4,
-    color: '#333',
+    color: '#000000',
     fontWeight: 'bold',
+    fontSize: 22,
   },
   performanceValue: {
-    color: '#333',
+    color: '#000000',
     fontWeight: 'bold',
+    fontSize: 22,
   },
   performanceLabel: {
-    color: '#666',
+    color: '#333333',
     marginTop: 4,
+    fontWeight: '600',
   },
   actionsGrid: {
     flexDirection: 'row',
@@ -1077,18 +1086,21 @@ const styles = StyleSheet.create({
   },
   actionText: {
     marginTop: 8,
-    color: '#333',
+    color: '#000000',
     textAlign: 'center',
+    fontWeight: '700',
   },
   dialogTitle: {
     textAlign: 'center',
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: '#000000',
   },
   dialogContent: {
     textAlign: 'center',
-    color: '#666',
+    color: '#333333',
     lineHeight: 24,
+    fontWeight: '500',
   },
   // Map Accordion Styles
   mapAccordionHeader: {
@@ -1113,12 +1125,13 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   mapHeaderTitle: {
-    color: '#333',
-    fontWeight: '600',
+    color: '#000000',
+    fontWeight: '700',
   },
   mapHeaderSubtitle: {
-    color: '#666',
+    color: '#333333',
     marginTop: 2,
+    fontWeight: '500',
   },
   mapHeaderRight: {
     flexDirection: 'row',
@@ -1172,9 +1185,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   mapInfoText: {
-    color: '#333',
+    color: '#000000',
     fontSize: 11,
-    fontWeight: '500',
+    fontWeight: '700',
   },
   mapPlaceholder: {
     height: 400,

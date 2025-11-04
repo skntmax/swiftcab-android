@@ -29,7 +29,9 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION"
+        "ACCESS_BACKGROUND_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "config": {
         "googleMaps": {
@@ -59,7 +61,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "96839465-4600-4b48-81f4-730b86335168"
       }
     }
   }
