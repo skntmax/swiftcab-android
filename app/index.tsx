@@ -6,10 +6,11 @@ import { Text } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from './lib/reducers/auth/authSlice';
 import { CONSTANTS } from './utils/const';
-import { getAuthData } from './utils/storage';
+import { clearLogoutFlag, getAuthData, wasLoggedOut } from './utils/storage';
 
 export default function Index() {
   const [isChecking, setIsChecking] = useState(true);
+  const [skipLocation, setSkipLocation] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -39,6 +40,16 @@ export default function Index() {
           router.replace('/(drawer)/(tabs)');
         }, 500);
       } else {
+        // Check if this is a logout redirect (user was previously logged in)
+        // If so, skip location and go directly to phone verification
+        const loggedOut = await wasLoggedOut();
+        setSkipLocation(loggedOut);
+        
+        // Clear the logout flag after checking
+        if (loggedOut) {
+          await clearLogoutFlag();
+        }
+        
         // No saved login, show onboarding
         setIsChecking(false);
       }
@@ -58,7 +69,7 @@ export default function Index() {
     );
   }
 
-  return <OnboardingFlowScreen />;
+  return <OnboardingFlowScreen initialStep={skipLocation ? 'phone_verification' : 'location'} />;
 }
 
 const styles = StyleSheet.create({

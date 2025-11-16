@@ -3,7 +3,7 @@
  */
 
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Platform, Dimensions } from 'react-native';
 import { Button, Text, Surface, Chip } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -12,6 +12,9 @@ import PlaceSearchInput from '@/components/map/PlaceSearchInput';
 import { useCurrentLocation, useDirections, useGeocoding } from '@/app/lib/hooks/useOlaMaps';
 import olaMapsAPI from '@/app/lib/api/olaMapsApi';
 import { CONSTANTS } from '@/app/utils/const';
+import StylishBackground from '@/components/ui/StylishBackground';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function MapDemoScreen() {
   const { location, loading: locationLoading } = useCurrentLocation();
@@ -75,25 +78,36 @@ export default function MapDemoScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Map View */}
-      <View style={styles.mapContainer}>
-        <OlaMapView
-          initialRegion={
-            location
-              ? {
-                  latitude: location.latitude,
-                  longitude: location.longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }
-              : undefined
-          }
-          markers={markers}
-          route={route || undefined}
-          showUserLocation={true}
-          followUserLocation={false}
-        />
+    <StylishBackground variant="default">
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text variant="headlineSmall" style={styles.headerTitle}>
+            Live Map
+          </Text>
+          <Text variant="bodySmall" style={styles.headerSubtitle}>
+            {Platform.OS === 'web' ? 'Map view is optimized for mobile devices' : 'Search destinations and navigate'}
+          </Text>
+        </View>
+
+        {/* Map View */}
+        <View style={styles.mapContainer}>
+          <OlaMapView
+            initialRegion={
+              location
+                ? {
+                    latitude: location.latitude,
+                    longitude: location.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }
+                : undefined
+            }
+            markers={markers}
+            route={route || undefined}
+            showUserLocation={true}
+            followUserLocation={false}
+          />
 
         {/* Loading overlay */}
         {locationLoading && (
@@ -103,11 +117,11 @@ export default function MapDemoScreen() {
               <Text style={styles.loadingText}>Getting your location...</Text>
             </Surface>
           </View>
-        )}
-      </View>
+          )}
+        </View>
 
-      {/* Search and Controls */}
-      <View style={styles.controlsContainer}>
+        {/* Search and Controls */}
+        <View style={styles.controlsContainer}>
         {/* Current Location Info */}
         {currentAddress && (
           <Surface style={styles.locationCard} elevation={2}>
@@ -165,18 +179,34 @@ export default function MapDemoScreen() {
             </View>
           </Surface>
         )}
-      </View>
-    </SafeAreaView>
+        </View>
+      </SafeAreaView>
+    </StylishBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8DC',
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(237, 137, 2, 0.1)',
+  },
+  headerTitle: {
+    color: '#000000',
+    fontWeight: '700',
+  },
+  headerSubtitle: {
+    color: '#666666',
+    marginTop: 4,
   },
   mapContainer: {
     flex: 1,
+    minHeight: 300,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -197,8 +227,9 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   controlsContainer: {
-    padding: 16,
+    padding: SCREEN_WIDTH > 600 ? 20 : 16,
     gap: 12,
+    maxHeight: 300,
   },
   locationCard: {
     flexDirection: 'row',

@@ -96,8 +96,12 @@ const ONBOARDING_STEPS: { step: OnboardingStep; title: string; description: stri
   { step: 'bank_account', title: 'Bank Details', description: 'Add payment information' },
 ];
 
-const OnboardingFlowScreen: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>('location');
+interface OnboardingFlowScreenProps {
+  initialStep?: OnboardingStep;
+}
+
+const OnboardingFlowScreen: React.FC<OnboardingFlowScreenProps> = ({ initialStep = 'location' }) => {
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>(initialStep);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
   const [showLogin, setShowLogin] = useState(false);
   const { visible, config, showDialog, hideDialog } = useDialog();
@@ -309,14 +313,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-// Wrap the component to include dialog
-const OnboardingFlowScreenWithDialog: React.FC = () => {
-  return (
-    <>
-      <OnboardingFlowScreen />
-    </>
-  );
-};
 
 export default OnboardingFlowScreen;

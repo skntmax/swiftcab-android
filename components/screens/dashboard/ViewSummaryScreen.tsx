@@ -10,12 +10,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Animated, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Button, Card, Dialog, Divider, Menu, Portal, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import AnimatedCard from '../../ui/AnimatedCard';
 import StylishBackground from '../../ui/StylishBackground';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface DashboardStats {
   todayEarnings: number;
@@ -283,7 +285,7 @@ const ViewSummaryScreen: React.FC = () => {
 
   const mapHeight = mapAnimation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 450], // Fixed height for map
+    outputRange: [0, SCREEN_WIDTH > 600 ? 500 : 400], // Responsive height for map
   });
 
   const rotateIcon = mapAnimation.interpolate({
@@ -307,7 +309,7 @@ const ViewSummaryScreen: React.FC = () => {
 
   const dashboardHeight = dashboardAnimation.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 1400], // Dynamic height for all dashboard cards
+    outputRange: [0, SCREEN_WIDTH > 600 ? 1500 : 1400], // Dynamic height for all dashboard cards
   });
 
   const rotateDashboardIcon = dashboardAnimation.interpolate({
@@ -836,8 +838,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
+    padding: SCREEN_WIDTH > 600 ? 24 : 16,
+    paddingBottom: 100, // More space at bottom for tab bar
   },
   cardMargin: {
     marginBottom: 16,
@@ -1007,10 +1009,13 @@ const styles = StyleSheet.create({
   earningsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 12,
   },
   earningsItem: {
     alignItems: 'center',
     flex: 1,
+    minWidth: SCREEN_WIDTH > 600 ? 150 : 100,
   },
   earningsAmount: {
     color: 'white',
@@ -1077,7 +1082,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   actionButton: {
-    width: '48%',
+    width: SCREEN_WIDTH > 600 ? '23%' : '48%',
     alignItems: 'center',
     padding: 16,
     backgroundColor: '#F8F9FA',
@@ -1190,7 +1195,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   mapPlaceholder: {
-    height: 400,
+    height: SCREEN_WIDTH > 600 ? 450 : 350,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',

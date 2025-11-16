@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   AUTH_TOKEN: '@swiftcab:auth_token',
   USER_DATA: '@swiftcab:user_data',
   ONBOARDING_COMPLETE: '@swiftcab:onboarding_complete',
+  LOGOUT_FLAG: '@swiftcab:logout_flag',
 } as const;
 
 export interface StoredUserData {
@@ -66,6 +67,9 @@ export const getAuthData = async (): Promise<StoredAuthData | null> => {
  */
 export const clearAuthData = async (): Promise<void> => {
   try {
+    // Set logout flag before clearing
+    await AsyncStorage.setItem(STORAGE_KEYS.LOGOUT_FLAG, 'true');
+    
     await AsyncStorage.multiRemove([
       STORAGE_KEYS.AUTH_TOKEN,
       STORAGE_KEYS.USER_DATA,
@@ -114,6 +118,30 @@ export const getAuthToken = async (): Promise<string | null> => {
   } catch (error) {
     console.error('Failed to get auth token:', error);
     return null;
+  }
+};
+
+/**
+ * Check if user was logged out
+ */
+export const wasLoggedOut = async (): Promise<boolean> => {
+  try {
+    const flag = await AsyncStorage.getItem(STORAGE_KEYS.LOGOUT_FLAG);
+    return flag === 'true';
+  } catch (error) {
+    console.error('Failed to check logout flag:', error);
+    return false;
+  }
+};
+
+/**
+ * Clear logout flag (call after showing phone verification)
+ */
+export const clearLogoutFlag = async (): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEYS.LOGOUT_FLAG);
+  } catch (error) {
+    console.error('Failed to clear logout flag:', error);
   }
 };
 
