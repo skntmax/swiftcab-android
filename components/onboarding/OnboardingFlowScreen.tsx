@@ -9,18 +9,18 @@ import StylishBackground from '../ui/StylishBackground';
 // Import all onboarding screens
 import { CONSTANTS } from '@/app/utils/const';
 import LocationStep from '../HomePage/Singup/steps/LocationStep';
-import MobileVerificationScreen from '../HomePage/Singup/steps/Step1';
 import LoginScreen from '../auth/LoginScreen';
+import SignupScreen from '../auth/screens/SignupScreen';
 import BankAccountScreen from './BankAccountScreen';
 import CitySelectionScreen from './CitySelectionScreen';
 import DocumentFlowScreen from './DocumentFlowScreen';
 import ProfileInfoScreen from './ProfileInfoScreen';
 import VehicleTypeScreen from './VehicleTypeScreen';
 
-type OnboardingStep = 
+export type OnboardingStep = 
   | 'location'
-  | 'phone_verification'
   | 'login'
+  | 'signup'
   | 'city_selection'
   | 'vehicle_type'
   | 'profile_info'
@@ -88,7 +88,7 @@ interface OnboardingData {
 
 const ONBOARDING_STEPS: { step: OnboardingStep; title: string; description: string }[] = [
   { step: 'location', title: 'Location Access', description: 'Enable location services' },
-  { step: 'phone_verification', title: 'Phone Verification', description: 'Verify your phone number' },
+  { step: 'login', title: 'Login', description: 'Sign in to your account' },
   { step: 'city_selection', title: 'Choose City', description: 'Select your operating city' },
   { step: 'vehicle_type', title: 'Vehicle Type', description: 'Choose your vehicle' },
   { step: 'profile_info', title: 'Personal Info', description: 'Complete your profile' },
@@ -103,7 +103,7 @@ interface OnboardingFlowScreenProps {
 const OnboardingFlowScreen: React.FC<OnboardingFlowScreenProps> = ({ initialStep = 'location' }) => {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(initialStep);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
-  const [showLogin, setShowLogin] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
   const { visible, config, showDialog, hideDialog } = useDialog();
   const router = useRouter();
 
@@ -115,26 +115,25 @@ const OnboardingFlowScreen: React.FC<OnboardingFlowScreenProps> = ({ initialStep
 
   const handleLocationGranted = (coords: { latitude: number; longitude: number }) => {
     setOnboardingData(prev => ({ ...prev, location: coords }));
-    setCurrentStep('phone_verification');
-  };
-
-  const handlePhoneVerified = () => {
-    // Show login option or continue with onboarding
-    showDialog(
-      'Phone Verified!',
-      'Would you like to sign in to an existing account or continue with new registration?',
-      [
-        { label: 'Sign In', onPress: () => setShowLogin(true) },
-        { label: 'Continue Registration', onPress: () => setCurrentStep('city_selection') },
-      ]
-    );
-
-    setCurrentStep('city_selection'); // step 3
+    setCurrentStep('login');
   };
 
   const handleLoginSuccess = () => {
-    // If user logs in, skip to main app
+    // If user logs in successfully, redirect to home page
     setCurrentStep('complete');
+  };
+
+  const handleSignupSuccess = () => {
+    // If user signs up successfully, redirect to home page
+    setCurrentStep('complete');
+  };
+
+  const handleNavigateToSignup = () => {
+    setShowSignup(true);
+  };
+
+  const handleNavigateToLogin = () => {
+    setShowSignup(false);
   };
 
   const handleCitySelected = (city: City) => {
@@ -175,9 +174,6 @@ const OnboardingFlowScreen: React.FC<OnboardingFlowScreenProps> = ({ initialStep
     );
   };
 
-  const showLoginPage = () => {
-    setShowLogin(true);
-  };
 
   const renderProgressHeader = () => (
     <View style={styles.progressContainer}>
@@ -220,12 +216,12 @@ const OnboardingFlowScreen: React.FC<OnboardingFlowScreenProps> = ({ initialStep
     );
   }
 
-  // If showing login screen
-  if (showLogin) {
+  // If showing signup screen
+  if (showSignup) {
     return (
-      <LoginScreen 
-        onLoginSuccess={handleLoginSuccess}
-        onNavigateToOTP={() => setShowLogin(false)}
+      <SignupScreen 
+        onSignupSuccess={handleSignupSuccess}
+        onNavigateToLogin={handleNavigateToLogin}
       />
     );
   }
@@ -234,15 +230,18 @@ const OnboardingFlowScreen: React.FC<OnboardingFlowScreenProps> = ({ initialStep
   return (
     <StylishBackground variant="onboarding">
       <SafeAreaView style={styles.container}>
-        {currentStep !== 'location' && renderProgressHeader()}
+        {currentStep !== 'location' && currentStep !== 'login' && renderProgressHeader()}
         
         {currentStep === 'location' && (
           <LocationStep onGranted={handleLocationGranted} />
         )}
         
-         {currentStep === 'phone_verification' && (
-           <MobileVerificationScreen onVerified={handlePhoneVerified} showLoginPage={showLoginPage} />
-         )}
+        {currentStep === 'login' && (
+          <LoginScreen 
+            onLoginSuccess={handleLoginSuccess}
+            onNavigateToSignup={handleNavigateToSignup}
+          />
+        )}
         
         {currentStep === 'city_selection' && (
           <CitySelectionScreen onCitySelect={handleCitySelected} />

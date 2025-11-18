@@ -101,6 +101,33 @@ export const authApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+
+    // OAuth Login (Google/Facebook)
+    loginByOAuth: builder.mutation<VerifyOtpResponse, { token: string; trafficBy: 'GOOGLE' | 'FACEBOOK'; userType: number }>({
+      query: (data) => ({
+        url: urls.auth_login_by_oauth,
+        method: 'POST',
+        body: {
+          token: data.token,
+          trafficBy: data.trafficBy,
+          userType: data.userType,
+        },
+      }),
+      invalidatesTags: ['Auth', 'User'],
+    }),
+
+    // Signup with OTP (uses same login endpoint with userType 20)
+    signupWithOtp: builder.mutation<LoginResponse, { phone: string; userType: number }>({
+      query: (credentials) => ({
+        url: urls.auth_login,
+        method: 'POST',
+        body: {
+          phone: credentials.phone,
+          userType: credentials.userType || 20, // 20 for signup
+        },
+      }),
+      invalidatesTags: ['Auth'],
+    }),
   }),
 });
 
@@ -113,6 +140,8 @@ export const {
   useRefreshTokenMutation,
   useGetCurrentUserQuery,
   useResendOtpMutation,
+  useLoginByOAuthMutation,
+  useSignupWithOtpMutation,
 } = authApi;
 
 export default authApi;

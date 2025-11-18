@@ -8,12 +8,19 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  success: boolean;
+  success?: boolean;
   message: string;
-  data?: {
+  status: number;
+  error: boolean;
+  data?: string | {
     token?: string;
-    user?: any;
-    requiresOtp?: boolean;
+    usersObj?: {
+      username: string;
+      firstName?: string;
+      lastName?: string;
+      avatar?: string | null;
+      roleTypeName?: string;
+    };
   };
 }
 
@@ -23,12 +30,19 @@ export interface VerifyOtpRequest {
 }
 
 export interface VerifyOtpResponse {
-  success: boolean;
+  success?: boolean;
   message: string;
+  status: number;
+  error: boolean;
   data?: {
     token: string;
-    user: any;
-    isNewUser?: boolean;
+    usersObj: {
+      username: string;
+      firstName?: string;
+      lastName?: string;
+      avatar?: string | null;
+      roleTypeName?: string;
+    };
   };
 }
 

@@ -1,20 +1,41 @@
-import { useEmailLoginMutation } from '@/app/lib/api';
-import { CONSTANTS } from '@/app/utils/const';
+import { useEmailLoginMutation, useLoginByOAuthMutation } from '@/app/lib/api';
+import { setCredentials } from '@/app/lib/reducers/auth/authSlice';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
+  Animated,
+  Dimensions,
+  ImageBackground,
+  Platform,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { HelperText, Surface, Text, TextInput } from 'react-native-paper';
+import { HelperText, Text, TextInput } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch } from 'react-redux';
+import AppButton from '../ui/Button/Button';
 import { PaperDialog, useDialog } from '../ui/Dialog/PaperDialog';
-import StylishBackground from '../ui/StylishBackground';
+import ParticlesBackground from '../ui/ParticlesBackground';
+
+// Theme colors - White & Black
+const THEME = {
+  background: '#FFFFFF',
+  surface: '#F5F5F5',
+  text: '#000000',
+  textSecondary: '#666666',
+  textTertiary: '#999999',
+  border: '#E0E0E0',
+  borderDark: '#CCCCCC',
+  accent: '#000000',
+  shadow: 'rgba(0, 0, 0, 0.1)',
+};
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface LoginForm {
   emailOrUsername: string;
@@ -23,231 +44,351 @@ interface LoginForm {
 
 interface Props {
   onLoginSuccess?: () => void;
-  onNavigateToOTP?: () => void;
+  onNavigateToSignup?: () => void;
 }
 
-const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onNavigateToOTP }) => {
+const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onNavigateToSignup }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [emailLogin, { isLoading, isSuccess, error }] = useEmailLoginMutation();
+  const [emailLogin, { isLoading, isSuccess }] = useEmailLoginMutation();
+  const [loginByOAuth, { isLoading: isOAuthLoading }] = useLoginByOAuthMutation();
   const { visible, config, showDialog, hideDialog } = useDialog();
+  const dispatch = useDispatch();
+  const buttonScale = React.useRef(new Animated.Value(1)).current;
+  const emailInputRef = useRef<any>(null);
 
   const { control, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     defaultValues: {
       emailOrUsername: '',
       password: '',
     },
+    mode: 'onChange',
   });
 
-  // Redirect to Summary page after successful login
+  // Redirect to home page after successful login
   useEffect(() => {
     if (isSuccess) {
-      // Navigate to drawer/tabs (Summary screen)
-      router.replace('/(drawer)/(tabs)');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      } else {
+        router.replace('/(drawer)/(tabs)');
+      }
     }
-  }, [isSuccess]);
+  }, [isSuccess, onLoginSuccess]);
+
+  const handleButtonPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Animated.sequence([
+      Animated.timing(buttonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   const handleEmailLogin = async (data: LoginForm) => {
-    try {
-      const result = await emailLogin({
-        emailOrUsername: data.emailOrUsername,
-        password: data.password,
-        userType: 22,
-      }).unwrap();
-      
-      console.log('✅ Login successful:', result.message);
-      
-      // Show success message
-      showDialog('Login Successful', result.message || 'Welcome back!');
-      
-      // onLoginSuccess will be called automatically by useEffect when isSuccess becomes true
-    } catch (err: any) {
-      console.error('❌ Login error:', err);
-      const errorMessage = err?.data?.message || err?.message || 'Invalid email/username or password';
-      showDialog('Login Failed', errorMessage);
-    }
+    handleButtonPress();
+    
+    // FOR TESTING: Skip API and go directly to home
+    router.replace('/(drawer)/(tabs)');
   };
 
   const handleFacebookLogin = () => {
-    showDialog('Facebook Login', 'Facebook login will be implemented soon.');
+    handleButtonPress();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    showDialog('Facebook Login', 'Facebook login will be implemented soon.', [
+      { label: 'OK', onPress: () => { } }
+    ]);
   };
 
-  const handleGoogleLogin = () => {
-    showDialog('Google Login', 'Google login will be implemented soon.');
+  const handleEmailLoginButton = () => {
+    handleButtonPress();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Focus on email input
+    setTimeout(() => {
+      emailInputRef.current?.focus();
+    }, 100);
   };
 
-  const handleOTPLogin = () => {
-    if (onNavigateToOTP) {
-      onNavigateToOTP();
+  const handleGoogleLogin = async () => {
+    handleButtonPress();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    try {
+      // For Google OAuth, we need to get the token from Google first
+      // This is a placeholder - you'll need to integrate expo-auth-session
+      // For now, show a dialog explaining the integration needed
+      showDialog(
+        'Google Login',
+        'Google OAuth integration requires expo-auth-session package. Please install it and configure Google OAuth credentials.',
+        [
+          { label: 'OK', onPress: () => { } }
+        ]
+      );
+
+      // TODO: Implement actual Google OAuth flow
+      // Example flow:
+      // 1. Get Google ID token using expo-auth-session
+      // 2. Call loginByOAuth with the token
+      // 3. Save credentials and redirect
+
+    } catch (err: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      const errorMessage = err?.data?.message || err?.message || 'Google login failed. Please try again.';
+      showDialog('Google Login Failed', errorMessage, [
+        { label: 'OK', onPress: () => { } }
+      ]);
+    }
+  };
+
+  // Helper function to handle Google OAuth token (to be called after getting token from Google)
+  const handleGoogleToken = async (googleToken: string) => {
+    try {
+      const result = await loginByOAuth({
+        token: googleToken,
+        trafficBy: 'GOOGLE',
+        userType: 22, // Driver user type for login
+      }).unwrap();
+
+      if (!result?.error && result.data) {
+        dispatch(setCredentials({
+          token: result.data.token,
+          user: {
+            username: result.data.usersObj.username,
+            firstName: result.data.usersObj.firstName || '',
+            lastName: result.data.usersObj.lastName || '',
+            avatar: result.data.usersObj.avatar || null,
+            roleTypeName: result.data.usersObj.roleTypeName || 'driver',
+          },
+        }));
+
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        showDialog('Login Successful', 'Welcome back!', [
+          {
+            label: 'OK', onPress: () => {
+              if (onLoginSuccess) {
+                onLoginSuccess();
+              } else {
+                router.replace('/(drawer)/(tabs)');
+              }
+            }
+          }
+        ]);
+      }
+    } catch (err: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      const errorMessage = err?.data?.message || err?.message || 'Google login failed. Please try again.';
+      showDialog('Login Failed', errorMessage, [
+        { label: 'OK', onPress: () => { } }
+      ]);
     }
   };
 
   const handleForgotPassword = () => {
-    showDialog('Forgot Password', 'Password reset will be implemented soon.');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    showDialog('Forgot Password', 'Password reset will be implemented soon.', [
+      { label: 'OK', onPress: () => { } }
+    ]);
   };
 
   const handleSignUp = () => {
-    showDialog('Sign Up', 'New users can register using OTP verification.');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (onNavigateToSignup) {
+      onNavigateToSignup();
+    }
   };
 
   return (
-    <StylishBackground variant="auth">
-      <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.closeButton}>
-              <MaterialCommunityIcons name="close" size={24} color="#666" />
-            </TouchableOpacity>
-            <Text style={styles.title}>Login/Signup</Text>
-          </View>
+    <SafeAreaView style={styles.container}>
+      <ImageBackground
+        source={require('../../assets/images/testBG.png')}
+        style={styles.backgroundImage}
+        imageStyle={{ opacity: 0.5 }}
+        resizeMode="cover"
+      >
+        <ParticlesBackground />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+        {/* Top Section - Social Login Buttons */}
+        <View style={styles.topSection}>
+          <Text style={styles.sectionTitle}>Login</Text>
 
-          {/* Logo Section */}
-          <View style={styles.logoSection}>
-            <View style={styles.logoContainer}>
-              <MaterialCommunityIcons name="car-multiple" size={48} color="#333" />
-            </View>
-            <Text style={styles.logoText}>swiftcab</Text>
-            <Text style={styles.tagline}>Fast. Reliable. Ride Smart.</Text>
-            <Text style={styles.subtitle}>to continue to Swiftcab</Text>
-          </View>
-
-          {/* Social Login Buttons */}
-          <View style={styles.socialSection}>
-            {/* Facebook Login */}
-            <TouchableOpacity style={styles.facebookButton} onPress={handleFacebookLogin}>
+          {/* Facebook Login Button */}
+          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={handleFacebookLogin}
+              activeOpacity={0.8}
+            >
               <MaterialCommunityIcons name="facebook" size={20} color="#1877F2" />
-              <Text style={styles.facebookButtonText}>Sign in with Facebook</Text>
+              <Text style={styles.socialButtonText}>Login with Facebook</Text>
             </TouchableOpacity>
+          </Animated.View>
 
-            {/* Google Login */}
-            <Surface style={styles.googleButton} elevation={1}>
-              <TouchableOpacity style={styles.googleButtonContent} onPress={handleGoogleLogin}>
-                <View style={styles.googleProfile}>
-                  <MaterialCommunityIcons name="google" size={20} color="#4285F4" />
-                  <Text style={styles.googleEmail}>Sign in as guest</Text>
-                </View>
-                <MaterialCommunityIcons name="google" size={20} color="#4285F4" />
-              </TouchableOpacity>
-            </Surface>
-
-            {/* OTP Login Button */}
-            <TouchableOpacity style={styles.otpButton} onPress={handleOTPLogin}>
-              <MaterialCommunityIcons name="cellphone-message" size={20} color="white" />
-              <Text style={styles.otpButtonText}>Login with OTP</Text>
+          {/* Email Login Button */}
+          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+            <TouchableOpacity
+              style={[styles.socialButton, styles.emailButton]}
+              onPress={handleEmailLoginButton}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="email" size={20} color={THEME.text} />
+              <Text style={[styles.socialButtonText, styles.emailButtonText]}>Login with Email</Text>
             </TouchableOpacity>
+          </Animated.View>
 
-            <Text style={styles.orText}>or</Text>
-          </View>
+          {/* Google Login Button */}
+          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+            <TouchableOpacity
+              style={[styles.socialButton, styles.googleButton]}
+              onPress={handleGoogleLogin}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons name="google" size={20} color="#4285F4" />
+              <Text style={[styles.socialButtonText, styles.googleButtonText]}>Login with Google</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
 
-          {/* Email/Password Form */}
-          <View style={styles.formSection}>
-            {/* Email/Username Input */}
-            <View style={styles.inputGroup}>
-              <Controller
-                control={control}
-                name="emailOrUsername"
-                rules={{
-                  required: 'Email or username is required',
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <>
-                    <TextInput
-                      mode="outlined"
-                      label="Email or Username"
-                      placeholder="Enter email or username"
-                      value={value}
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      autoCapitalize="none"
-                      error={!!errors.emailOrUsername}
-                      left={<TextInput.Icon icon="account" />}
-                      style={styles.textInput}
-                    />
-                    <HelperText type="error" visible={!!errors.emailOrUsername}>
-                      {errors.emailOrUsername?.message}
-                    </HelperText>
-                  </>
-                )}
-              />
-            </View>
+        {/* Divider */}
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
 
-            {/* Password Input */}
-            <View style={styles.inputGroup}>
-              <Controller
-                control={control}
-                name="password"
-                rules={{
-                  required: 'Password is required',
-                  minLength: {
-                    value: 3,
-                    message: 'Password must be at least 6 characters'
+        {/* Bottom Section - Email/Password Form */}
+        <View style={styles.bottomSection}>
+          {/* Email/Username Input */}
+          <View style={styles.inputGroup}>
+            <Controller
+              control={control}
+              name="emailOrUsername"
+              rules={{
+                required: 'Email or username is required',
+                validate: (value) => {
+                  if (!value.trim()) {
+                    return 'Email or username cannot be empty';
                   }
-                }}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <>
-                    <TextInput
-                      mode="outlined"
-                      label="Password"
-                      placeholder="Enter your password"
-                      value={value}
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      secureTextEntry={!showPassword}
-                      autoCapitalize="none"
-                      error={!!errors.password}
-                      left={<TextInput.Icon icon="lock" />}
-                      right={
-                        <TextInput.Icon
-                          icon={showPassword ? 'eye-off' : 'eye'}
-                          onPress={() => setShowPassword(!showPassword)}
-                        />
-                      }
-                      style={styles.textInput}
-                    />
-                    <HelperText type="error" visible={!!errors.password}>
-                      {errors.password?.message}
-                    </HelperText>
-                  </>
-                )}
-              />
-            </View>
-
-            {/* Continue Button */}
-            <TouchableOpacity style={styles.continueButton} onPress={handleSubmit(handleEmailLogin)}>
-              <LinearGradient
-                colors={['#ED8902', '#FF9F1C']}
-                style={styles.continueButtonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                {isLoading ? (
-                  <MaterialCommunityIcons name="loading" size={20} color="white" />
-                ) : (
-                  <Text style={styles.continueButtonText}>Continue</Text>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
+                  return true;
+                }
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <>
+                  <TextInput
+                    ref={emailInputRef}
+                    mode="outlined"
+                    label="Email or Username"
+                    placeholder="Enter email or username"
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    autoCapitalize="none"
+                    error={!!errors.emailOrUsername}
+                    style={styles.textInput}
+                    contentStyle={styles.textInputContent}
+                    outlineColor={THEME.border}
+                    activeOutlineColor={THEME.accent}
+                    textColor={THEME.text}
+                    placeholderTextColor={THEME.textTertiary}
+                    left={<TextInput.Icon icon="account" color={THEME.textSecondary} />}
+                  />
+                  <HelperText type="error" visible={!!errors.emailOrUsername} style={styles.helperText}>
+                    {errors.emailOrUsername?.message}
+                  </HelperText>
+                </>
+              )}
+            />
           </View>
 
-          {/* Footer Links */}
-          <View style={styles.footer}>
-            <TouchableOpacity onPress={handleForgotPassword}>
-              <Text style={styles.forgotPassword}>
-                Forgot Password? <Text style={styles.linkText}>Click here</Text>
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={handleSignUp}>
-              <Text style={styles.signUpText}>
-                new user ? <Text style={styles.linkText}>Sign up here</Text>
-              </Text>
-            </TouchableOpacity>
+          {/* Password Input */}
+          <View style={styles.inputGroup}>
+            <Controller
+              control={control}
+              name="password"
+              rules={{
+                required: 'Password is required',
+                minLength: {
+                  value: 4,
+                  message: 'Password must be at least 6 characters'
+                }
+              }}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <>
+                  <TextInput
+                    mode="outlined"
+                    label="Password"
+                    placeholder="Enter your password"
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    error={!!errors.password}
+                    style={styles.textInput}
+                    contentStyle={styles.textInputContent}
+                    outlineColor={THEME.border}
+                    activeOutlineColor={THEME.accent}
+                    textColor={THEME.text}
+                    placeholderTextColor={THEME.textTertiary}
+                    left={<TextInput.Icon icon="lock" color={THEME.textSecondary} />}
+                    right={
+                      <TextInput.Icon
+                        icon={showPassword ? 'eye-off' : 'eye'}
+                        color={THEME.textSecondary}
+                        onPress={() => setShowPassword(!showPassword)}
+                      />
+                    }
+                  />
+                  <HelperText type="error" visible={!!errors.password} style={styles.helperText}>
+                    {errors.password?.message}
+                  </HelperText>
+                </>
+              )}
+            />
           </View>
 
+          {/* Continue Button */}
+          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+            <AppButton
+              label={isLoading ? "Logging in..." : "Continue"}
+              onPress={handleSubmit(handleEmailLogin)}
+              loading={isLoading}
+              disabled={isLoading}
+              color={THEME.accent}
+              style={styles.continueButton}
+            />
+          </Animated.View>
+
+          {/* Forgot Password */}
+          <TouchableOpacity
+            onPress={handleForgotPassword}
+            style={styles.forgotPasswordContainer}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
+
+          {/* New User Signup */}
+          <View style={styles.signupContainer}>
+            <Text style={styles.signupText}>New user? </Text>
+            <TouchableOpacity onPress={handleSignUp} activeOpacity={0.7}>
+              <Text style={styles.signupLink}>Sign up here</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         </ScrollView>
-      </SafeAreaView>
-      
+      </ImageBackground>
+
       {/* Dialog for alerts */}
       <PaperDialog
         visible={visible}
@@ -256,180 +397,152 @@ const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onNavigateToOTP }) => {
         message={config.message}
         actions={config.actions}
       />
-    </StylishBackground>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: THEME.background,
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingTop: Platform.OS === 'ios' ? 20 : 40,
+    paddingBottom: 40,
   },
-  header: {
+  topSection: {
+    marginTop: 0,
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: THEME.text,
+    marginBottom: 24,
+    letterSpacing: -0.5,
+  },
+  socialButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 30,
-    position: 'relative',
-  },
-  closeButton: {
-    position: 'absolute',
-    right: 0,
-    padding: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-  },
-  logoSection: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    backgroundColor: 'white',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  logoText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  tagline: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-  socialSection: {
-    marginBottom: 30,
-  },
-  facebookButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
-    paddingVertical: 12,
+    backgroundColor: THEME.surface,
+    paddingVertical: 16,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    ...Platform.select({
+      ios: {
+        shadowColor: THEME.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
-  facebookButtonText: {
+  emailButton: {
+    backgroundColor: THEME.text,
+    borderColor: THEME.text,
+  },
+  socialButtonText: {
     fontSize: 16,
+    fontWeight: '600',
     color: '#1877F2',
-    fontWeight: '500',
-    marginLeft: 8,
+    marginLeft: 12,
+  },
+  emailButtonText: {
+    color: THEME.background,
   },
   googleButton: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    marginBottom: 12,
+    backgroundColor: THEME.surface,
+    borderColor: THEME.border,
   },
-  googleButtonContent: {
+  googleButtonText: {
+    color: '#4285F4',
+  },
+  divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    marginVertical: 32,
   },
-  googleProfile: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: THEME.border,
   },
-  googleEmail: {
+  dividerText: {
+    marginHorizontal: 16,
     fontSize: 14,
-    color: '#333',
-    marginLeft: 8,
-  },
-  otpButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#333',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  otpButtonText: {
-    fontSize: 16,
-    color: 'white',
+    color: THEME.textSecondary,
     fontWeight: '500',
-    marginLeft: 8,
   },
-  orText: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-  },
-  formSection: {
-    marginBottom: 30,
+  bottomSection: {
+    flex: 1,
   },
   inputGroup: {
-    marginBottom: 8,
+    marginBottom: 20,
   },
   textInput: {
-    backgroundColor: 'white',
+    backgroundColor: THEME.background,
+  },
+  textInputContent: {
+    backgroundColor: THEME.background,
+  },
+  helperText: {
+    marginTop: 4,
+    fontSize: 12,
   },
   continueButton: {
-    marginTop: 10,
-    borderRadius: 8,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    borderRadius: 12,
+    marginTop: 8,
+    marginBottom: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: THEME.shadow,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
-  continueButtonGradient: {
-    paddingVertical: 16,
+  forgotPasswordContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 24,
   },
-  continueButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-  },
-  footer: {
-    alignItems: 'center',
-    gap: 16,
-  },
-  forgotPassword: {
+  forgotPasswordText: {
     fontSize: 14,
-    color: '#666',
-  },
-  signUpText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  linkText: {
-    color: CONSTANTS.theme.primaryColor,
+    color: THEME.textSecondary,
     fontWeight: '500',
+  },
+  signupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  signupText: {
+    fontSize: 14,
+    color: THEME.textSecondary,
+  },
+  signupLink: {
+    fontSize: 14,
+    color: THEME.text,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
 

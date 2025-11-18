@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { LogBox } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   MD3LightTheme as DefaultTheme,
   PaperProvider,
@@ -144,16 +145,18 @@ export default function RootLayout() {
   }
 
   return (
-    <StoreProvider store={store}>
-      <SocketProvider>
-        <PaperProvider theme={theme}>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="(drawer)" />
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-        </PaperProvider>
-      </SocketProvider>
-    </StoreProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <StoreProvider store={store}>
+        <SocketProvider>
+          <PaperProvider theme={theme}>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(drawer)" />
+              <Stack.Screen name="(tabs)" />
+            </Stack>
+          </PaperProvider>
+        </SocketProvider>
+      </StoreProvider>
+    </GestureHandlerRootView>
   );
 }

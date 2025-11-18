@@ -1,4 +1,4 @@
-import OnboardingFlowScreen from '@/components/onboarding/OnboardingFlowScreen';
+import OnboardingFlowScreen, { type OnboardingStep } from '@/components/onboarding/OnboardingFlowScreen';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
@@ -69,7 +69,15 @@ export default function Index() {
     );
   }
 
-  return <OnboardingFlowScreen initialStep={skipLocation ? 'phone_verification' : 'location'} />;
+  // Type fix for initialStep: use correct OnboardingStep type or undefined
+  let initialStep: OnboardingStep | undefined = undefined;
+  if (skipLocation === true) {
+    initialStep = 'login'; // Skip location and go directly to login
+  } else {
+    initialStep = 'location'; // Start with location step
+  }
+
+  return <OnboardingFlowScreen initialStep={initialStep} />;
 }
 
 const styles = StyleSheet.create({

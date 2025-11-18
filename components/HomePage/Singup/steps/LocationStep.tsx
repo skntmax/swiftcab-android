@@ -2,7 +2,7 @@ import { CONSTANTS } from '@/app/utils/const';
 import AppButton from '@/components/ui/Button/Button';
 import { PaperDialog, useDialog } from '@/components/ui/Dialog/PaperDialog';
 import * as Location from 'expo-location';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { Button, HelperText, Text, useTheme } from 'react-native-paper';
 
@@ -135,6 +135,45 @@ const LocationStep: React.FC<Props> = ({ onGranted }) => {
     );
   };
 
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: 20,
+      paddingTop: 24,
+      backgroundColor: theme.colors.surface,
+    },
+    title: {
+      marginBottom: 6,
+    },
+    subtitle: {
+      color: '#666666',
+      marginBottom: 16,
+      lineHeight: 22,
+    },
+    webInstructions: {
+      color: '#4CAF50',
+      marginBottom: 16,
+      backgroundColor: '#F1F8E9',
+      padding: 12,
+      borderRadius: 8,
+      textAlign: 'center',
+      lineHeight: 18,
+    },
+    primaryButton: {
+      borderRadius: 24,
+      marginBottom: 8,
+      backgroundColor: theme.colors.secondary,
+    },
+    secondaryButton: {
+      marginTop: 8,
+      marginBottom: 16,
+    },
+    skipButton: {
+      marginTop: 16,
+      marginBottom: 8,
+    },
+  }), [theme]);
+
   return (
     <View style={styles.container}>
       <Text variant="headlineMedium" style={styles.title}>Enable Location</Text>
@@ -190,42 +229,6 @@ const LocationStep: React.FC<Props> = ({ onGranted }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-  },
-  title: {
-    marginBottom: 6,
-  },
-  subtitle: {
-    color: '#666',
-    marginBottom: 16,
-    lineHeight: 22,
-  },
-  webInstructions: {
-    color: '#4CAF50',
-    marginBottom: 16,
-    backgroundColor: '#F1F8E9',
-    padding: 12,
-    borderRadius: 8,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  primaryButton: {
-    borderRadius: 24,
-    marginBottom: 8,
-  },
-  secondaryButton: {
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  skipButton: {
-    marginTop: 16,
-    marginBottom: 8,
-  },
-});
 
 export default LocationStep;
 

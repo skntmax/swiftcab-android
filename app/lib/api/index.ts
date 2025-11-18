@@ -8,8 +8,8 @@ export { baseApi } from './baseApi';
 
 // Authentication API
 export {
-  useDriverLoginMutation, useEmailLoginMutation, useGetCurrentUserQuery, useLogoutMutation,
-  useRefreshTokenMutation, useResendOtpMutation, useVerifyOtpMutation
+  useDriverLoginMutation, useEmailLoginMutation, useGetCurrentUserQuery, useLoginByOAuthMutation, useLogoutMutation,
+  useRefreshTokenMutation, useResendOtpMutation, useSignupWithOtpMutation, useVerifyOtpMutation
 } from './authApi';
 
 // Driver Profile & Documents API

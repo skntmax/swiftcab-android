@@ -1,24 +1,32 @@
 import { useDriverLoginMutation, useVerifyOtpMutation } from '@/app/lib/api/authApi';
 import { setLastLoginPhone } from '@/app/lib/reducers/auth/authSlice';
-import { CONSTANTS } from '@/app/utils/const';
 import AppButton from '@/components/ui/Button/Button';
 import { PaperDialog, useDialog } from '@/components/ui/Dialog/PaperDialog';
-import StylishSignupBackground from '@/components/ui/StylishSignupBackground';
 import { TextField } from '@/components/ui/TextField/TextField';
-import React, { useRef, useState } from 'react';
+import * as Haptics from 'expo-haptics';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
-  Image,
+  Animated,
+  Dimensions,
+  Platform,
   ScrollView,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
 import { TextInput as PaperTextInput, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
+import {
+  formatPhoneNumber,
+  getCompleteOTP,
+  validateCompleteOTP,
+  verificationFormSchema
+} from './validationSchema';
 // Form data interface
-interface VerificationForm {
+export interface VerificationForm {
   phoneNumber: string;
   otp1: string;
   otp2: string;
@@ -31,6 +39,23 @@ interface Props {
   showLoginPage?: () => void;
 }
 
+// Theme colors
+const THEME = {
+  background: '#000000',
+  surface: '#1A1A1A',
+  surfaceLight: '#2A2A2A',
+  text: '#FFFFFF',
+  textSecondary: '#B0B0B0',
+  textTertiary: '#808080',
+  accent: '#00D4FF', // Modern cyan blue
+  accentDark: '#00A8CC',
+  border: '#333333',
+  borderLight: '#404040',
+  shadow: 'rgba(0, 212, 255, 0.1)',
+};
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }) => {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [autoVerify, setAutoVerify] = useState(true);
@@ -38,18 +63,42 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
   const dispatch = useDispatch();
   const { visible, config, showDialog, hideDialog } = useDialog();
 
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const buttonScale = useRef(new Animated.Value(1)).current;
         
   // RTK Query mutations
   const [driverLogin, { isLoading: isLoginLoading, error: loginError }] = useDriverLoginMutation();
   const [verifyOtp, { isLoading: isOtpLoading, error: otpError }] = useVerifyOtpMutation();
 
   // OTP input refs for focus management
-  const otp1Ref = useRef<any>("");
-  const otp2Ref = useRef<any>("");
-  const otp3Ref = useRef<any>("");
-  const otp4Ref = useRef<any>("");
+  const otp1Ref = useRef<TextInput>(null);
+  const otp2Ref = useRef<TextInput>(null);
+  const otp3Ref = useRef<TextInput>(null);
+  const otp4Ref = useRef<TextInput>(null);
 
-  const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm<any, any>({
+  // Animate on mount and step change
+  useEffect(() => {
+    fadeAnim.setValue(0);
+    slideAnim.setValue(50);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [step]);
+
+  const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm<VerificationForm>({
     defaultValues: {
       phoneNumber: '',
       otp1: '',
@@ -58,6 +107,7 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
       otp4: '',
     },
     mode: 'onChange',
+    resolver: undefined, // Using inline validation rules instead of resolver
   });
 
 
@@ -67,17 +117,40 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
   const otp3 = watch('otp3');
   const otp4 = watch('otp4');
 
+  // Button press animation with haptic feedback
+  const handleButtonPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Animated.sequence([
+      Animated.timing(buttonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   // Handle phone number submission
   const handlePhoneSubmit = async (data: VerificationForm) => {
+    handleButtonPress();
+    
+    // Format phone number before submission
+    const formattedPhone = formatPhoneNumber(data.phoneNumber);
+    
     try {
       const result: any = await driverLogin({
-        phone: data.phoneNumber,
+        phone: formattedPhone,
         userType: 22 // Driver user type
       }).unwrap();
 
       if (!result?.error) {
-        setPhoneNumber(data.phoneNumber);
-        dispatch(setLastLoginPhone(data.phoneNumber));
+        setPhoneNumber(formattedPhone);
+        dispatch(setLastLoginPhone(formattedPhone));
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setStep('otp');
         showDialog(
           'OTP Sent',
@@ -86,6 +159,7 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
         );
       }
     } catch (error: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       showDialog(
         'Login Failed',
         error.data?.message || 'Something went wrong. Please try again.',
@@ -96,7 +170,20 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
 
   // Handle OTP verification
   const handleOTPVerify = async (data: VerificationForm) => {
-    const otp = `${data.otp1}${data.otp2}${data.otp3}${data.otp4}`;
+    handleButtonPress();
+    
+    // Validate complete OTP before submission
+    if (!validateCompleteOTP(data.otp1, data.otp2, data.otp3, data.otp4)) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      showDialog(
+        'Invalid OTP',
+        'Please enter all 4 OTP digits',
+        [{ label: 'OK', onPress: () => {} }]
+      );
+      return;
+    }
+    
+    const otp = getCompleteOTP(data.otp1, data.otp2, data.otp3, data.otp4);
     
     try {
       const result:any = await verifyOtp({
@@ -104,11 +191,11 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
         phone: phoneNumber
       }).unwrap();
 
-      debugger
       if (!result?.error) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         showDialog(
           'Verification Successful!',
-          "you have been succesfully varified",
+          "You have been successfully verified",
           [
             {
               label: 'Continue',
@@ -120,9 +207,9 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
             }
           ]
         );
- 
       }
     } catch (error: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       showDialog(
         'Verification Failed',
         error.data?.message || 'Invalid OTP. Please try again.',
@@ -132,7 +219,7 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
   };
 
   // Handle OTP input change with auto-focus
-  const handleOTPChange = (value: string, field: keyof VerificationForm, nextRef?: React.RefObject<TextInput>) => {
+  const handleOTPChange = (value: string, field: keyof VerificationForm, nextRef?: React.RefObject<TextInput | null>) => {
     if (value.length <= 1 && /^\d*$/.test(value)) {
       setValue(field, value);
       
@@ -143,33 +230,49 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
   };
 
   // Handle OTP input key press for backspace navigation
-  const handleOTPKeyPress = (key: string, field: keyof VerificationForm, prevRef?: React.RefObject<TextInput>) => {
+  const handleOTPKeyPress = (key: string, field: keyof VerificationForm, prevRef?: React.RefObject<TextInput | null>) => {
     if (key === 'Backspace' && !watch(field) && prevRef?.current) {
       prevRef.current.focus();
     }
   };
 
   // Render header illustration
-  const renderHeader = () => (
-    <View style={styles.headerContainer}>
-      <View style={styles.illustrationContainer}>
-        <View style={styles.illustrationBackground}>
-          <Image
-            source={require('@/assets/images/driver-app.png')}
-            style={styles.headerImage}
-            resizeMode="contain"
-          />
-        </View>
-      </View>
+  // const renderHeader = () => (
+  //   <Animated.View 
+  //     style={[
+  //       styles.headerContainer,
+  //       {
+  //         opacity: fadeAnim,
+  //         transform: [{ translateY: slideAnim }],
+  //       },
+  //     ]}
+  //   >
+  //     <View style={styles.illustrationContainer}>
+  //       <View style={styles.illustrationBackground}>
+  //         <Image
+  //           source={require('@/assets/images/driver-app.png')}
+  //           style={styles.headerImage}
+  //           resizeMode="contain"
+  //         />
+  //       </View>
+  //     </View>
       
-      <Text style={styles.title}>Convenient Rides</Text>
-      <Text style={styles.subtitle}>Across 100+ cities in India</Text>
-    </View>
-  );
+  //     <Text style={styles.title}>Convenient Rides</Text>
+  //     <Text style={styles.subtitle}>Across 100+ cities in India</Text>
+  //   </Animated.View>
+  // );
 
   // Render phone input step
   const renderPhoneStep = () => (
-    <View style={styles.formContainer}>
+    <Animated.View 
+      style={[
+        styles.formContainer,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
+    >
       <Text style={styles.stepTitle}>Let's get Started</Text>
       <Text style={styles.stepSubtitle}>Verify your account using OTP</Text>
       
@@ -179,15 +282,10 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
           control={control}
           label=""
           placeholder="Enter phone number"
+          placeholderTextColor={THEME.textTertiary}
           isPhone
           keyboardType="phone-pad"
-          rules={{
-            required: 'Phone number is required',
-            pattern: {
-              value: /^[6-9]\d{9}$/,
-              message: 'Please enter a valid 10-digit phone number'
-            }
-          }}
+          rules={verificationFormSchema.phoneNumber}
           style={styles.phoneInput}
           left={
             <View style={styles.countryCode}>
@@ -197,30 +295,45 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
         />
       </View>
 
-      <AppButton
-        label={isLoginLoading ? "Sending OTP..." : "Proceed"}
-        onPress={handleSubmit(handlePhoneSubmit)}
-        loading={isLoginLoading}
-        disabled={isLoginLoading || !watch('phoneNumber')}
-        color="#FFD700"
-        style={styles.primaryButton}
-      />
+      <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+        <AppButton
+          label={isLoginLoading ? "Sending OTP..." : "Proceed"}
+          onPress={handleSubmit(handlePhoneSubmit)}
+          loading={isLoginLoading}
+          disabled={isLoginLoading || !watch('phoneNumber')}
+          color={THEME.accent}
+          style={styles.primaryButton}
+        />
+      </Animated.View>
       
       <Text style={styles.orText}>Or</Text>
       
-      <AppButton
-        label="Sign in"
-        onPress={() => showLoginPage?.()}
-        mode="contained"
-        color="#FFD700"
-        style={styles.primaryButton}
-      />
-    </View>
+      <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+        <AppButton
+          label="Sign in"
+          onPress={() => {
+            handleButtonPress();
+            showLoginPage?.();
+          }}
+          mode="outlined"
+          color={THEME.accent}
+          style={styles.secondaryButton}
+        />
+      </Animated.View>
+    </Animated.View>
   );
 
   // Render OTP input step
   const renderOTPStep = () => (
-    <View style={styles.formContainer}>
+    <Animated.View 
+      style={[
+        styles.formContainer,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
+    >
       <Text variant="headlineMedium" style={styles.stepTitle}>Enter OTP</Text>
       <Text variant="bodyMedium" style={styles.stepSubtitle}>
         OTP sent to +91 {watch('phoneNumber')}
@@ -237,6 +350,10 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
           maxLength={1}
           style={styles.otpInput}
           textAlign="center"
+          textColor={THEME.text}
+          outlineColor={THEME.border}
+          activeOutlineColor={THEME.accent}
+          contentStyle={styles.otpInputContent}
         />
         <PaperTextInput
           ref={otp2Ref}
@@ -248,6 +365,10 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
           maxLength={1}
           style={styles.otpInput}
           textAlign="center"
+          textColor={THEME.text}
+          outlineColor={THEME.border}
+          activeOutlineColor={THEME.accent}
+          contentStyle={styles.otpInputContent}
         />
         <PaperTextInput
           ref={otp3Ref}
@@ -259,6 +380,10 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
           maxLength={1}
           style={styles.otpInput}
           textAlign="center"
+          textColor={THEME.text}
+          outlineColor={THEME.border}
+          activeOutlineColor={THEME.accent}
+          contentStyle={styles.otpInputContent}
         />
         <PaperTextInput
           ref={otp4Ref}
@@ -270,12 +395,20 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
           maxLength={1}
           style={styles.otpInput}
           textAlign="center"
+          textColor={THEME.text}
+          outlineColor={THEME.border}
+          activeOutlineColor={THEME.accent}
+          contentStyle={styles.otpInputContent}
         />
       </View>
 
       <TouchableOpacity 
         style={styles.autoVerifyContainer}
-        onPress={() => setAutoVerify(!autoVerify)}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          setAutoVerify(!autoVerify);
+        }}
+        activeOpacity={0.7}
       >
         <View style={[styles.radioButton, autoVerify && styles.radioButtonSelected]}>
           {autoVerify && <View style={styles.radioButtonInner} />}
@@ -283,29 +416,42 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
         <Text style={styles.autoVerifyText}>Auto Verify</Text>
       </TouchableOpacity>
 
-      <AppButton
-        label={isOtpLoading ? "Verifying..." : "Proceed"}
-        onPress={handleSubmit(handleOTPVerify)}
-        loading={isOtpLoading}
-        disabled={isOtpLoading || !otp1 || !otp2 || !otp3 || !otp4}
-        color="#FFD700"
-        style={styles.primaryButton}
-      />
+      <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+        <AppButton
+          label={isOtpLoading ? "Verifying..." : "Proceed"}
+          onPress={handleSubmit(handleOTPVerify)}
+          loading={isOtpLoading}
+          disabled={isOtpLoading || !validateCompleteOTP(otp1, otp2, otp3, otp4)}
+          color={THEME.accent}
+          style={styles.primaryButton}
+        />
+      </Animated.View>
       
       <Text style={styles.orText}>Or</Text>
       
-      <AppButton
-        label="Sign in"
-        onPress={() => console.log('Sign in pressed')}
-        mode="contained"
-        color="#FFD700"
-        style={styles.primaryButton}
-      />
+      <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+        <AppButton
+          label="Sign in"
+          onPress={() => {
+            handleButtonPress();
+            showLoginPage?.();
+          }}
+          mode="outlined"
+          color={THEME.accent}
+          style={styles.secondaryButton}
+        />
+      </Animated.View>
       
-      <TouchableOpacity onPress={() => setStep('phone')}>
+      <TouchableOpacity 
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          setStep('phone');
+        }}
+        activeOpacity={0.7}
+      >
         <Text style={styles.backButton}>← Back to phone number</Text>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 
   // Render terms and conditions
@@ -321,14 +467,15 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StylishSignupBackground variant="auth">
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        {renderHeader()}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer} 
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        {/* {renderHeader()} */}
         {step === 'phone' ? renderPhoneStep() : renderOTPStep()}
         {renderTerms()}
-      
       </ScrollView>
-      </StylishSignupBackground>
       
       {/* Dialog for alerts */}
       <PaperDialog
@@ -345,11 +492,13 @@ const MobileVerificationScreen: React.FC<Props> = ({ onVerified, showLoginPage }
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF8DC', // Light cream background
+    backgroundColor: THEME.background,
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'ios' ? 20 : 40,
+    paddingBottom: 40,
   },
   headerContainer: {
     alignItems: 'center',
@@ -359,151 +508,219 @@ const styles = StyleSheet.create({
   illustrationContainer: {
     width: '100%',
     height: 200,
-    marginBottom: 20,
+    marginBottom: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
   illustrationBackground: {
     width: '90%',
     height: '100%',
-    backgroundColor: '#F5E6A8',
-    borderRadius: 20,
+    backgroundColor: THEME.surface,
+    borderRadius: 24,
     position: 'relative',
     overflow: 'hidden',
-  },
-  // Simplified illustration elements
-  scooterContainer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 30,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    ...Platform.select({
+      ios: {
+        shadowColor: THEME.shadow,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   headerImage: {
     width: '100%',
     height: '100%',
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
+    fontSize: 32,
+    fontWeight: '700',
+    color: THEME.text,
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: THEME.textSecondary,
+    fontWeight: '400',
   },
   formContainer: {
     flex: 1,
-    paddingHorizontal: 10,
+    paddingHorizontal: 4,
   },
   stepTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
+    fontSize: 36,
+    fontWeight: '700',
+    color: THEME.text,
+    marginBottom: 12,
+    letterSpacing: -0.8,
   },
   stepSubtitle: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 30,
+    color: THEME.textSecondary,
+    marginBottom: 32,
+    fontWeight: '400',
   },
   phoneInputContainer: {
-    marginBottom: 30,
+    marginBottom: 32,
   },
   phoneInput: {
-    backgroundColor: '#FFF',
-    borderRadius: 50,
+    backgroundColor: THEME.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    ...Platform.select({
+      ios: {
+        shadowColor: THEME.shadow,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   countryCode: {
-    paddingLeft: 15,
+    paddingLeft: 16,
     justifyContent: 'center',
   },
   countryCodeText: {
     fontSize: 16,
-    color: '#333',
+    color: THEME.text,
     fontWeight: '600',
   },
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 30,
-    paddingHorizontal: 20,
+    marginBottom: 32,
+    paddingHorizontal: 8,
+    gap: 16,
   },
   otpInput: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#FFF',
-    fontSize: 24,
-    fontWeight: 'bold',
+    width: 72,
+    height: 72,
+    backgroundColor: THEME.surface,
+    fontSize: 28,
+    fontWeight: '700',
+    borderRadius: 16,
+    borderWidth: 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: THEME.shadow,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  otpInputContent: {
+    backgroundColor: THEME.surface,
   },
   autoVerifyContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30,
-    paddingLeft: 10,
+    marginBottom: 32,
+    paddingLeft: 4,
   },
   radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: THEME.border,
     marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: THEME.surface,
   },
   radioButtonSelected: {
-    borderColor: CONSTANTS.theme.primaryColor,
+    borderColor: THEME.accent,
+    backgroundColor: THEME.surface,
   },
   radioButtonInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: CONSTANTS.theme.primaryColor,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: THEME.accent,
   },
   autoVerifyText: {
     fontSize: 16,
-    color: '#333',
+    color: THEME.text,
     fontWeight: '500',
   },
   primaryButton: {
-    backgroundColor: CONSTANTS.theme.primaryColor,
-    borderRadius: 25,
-    marginVertical: 10,
-    elevation: 2,
-    shadowColor: '#fff',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    borderRadius: 16,
+    marginVertical: 12,
+    paddingVertical: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: THEME.accent,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
+  },
+  secondaryButton: {
+    borderRadius: 16,
+    marginVertical: 12,
+    paddingVertical: 4,
+    borderWidth: 2,
+    borderColor: THEME.accent,
+    ...Platform.select({
+      ios: {
+        shadowColor: THEME.shadow,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   orText: {
     textAlign: 'center',
-    fontSize: 16,
-    color: '#fff',
-    marginVertical: 15,
+    fontSize: 14,
+    color: THEME.textTertiary,
+    marginVertical: 16,
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
   backButton: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#2196F3',
-    marginTop: 20,
-    textDecorationLine: 'underline',
+    color: THEME.accent,
+    marginTop: 24,
+    fontWeight: '500',
   },
   termsContainer: {
-    paddingVertical: 20,
-    paddingHorizontal: 10,
+    paddingVertical: 24,
+    paddingHorizontal: 12,
+    marginTop: 20,
   },
   termsText: {
     fontSize: 12,
-    color: '#666',
+    color: THEME.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
+    fontWeight: '400',
   },
   termsLink: {
-    color: '#2196F3',
-    textDecorationLine: 'underline',
+    color: THEME.accent,
+    fontWeight: '500',
   },
 });
 

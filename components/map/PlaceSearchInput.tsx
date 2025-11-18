@@ -1,21 +1,23 @@
 /**
  * PlaceSearchInput Component
  * 
- * Search input with autocomplete for places using Ola Maps
+ * Search input with autocomplete for places using Photon API (free, no API key required)
  */
 
-import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, FlatList, TouchableOpacity } from 'react-native';
-import { TextInput, Text, Surface, ActivityIndicator, Divider } from 'react-native-paper';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { usePlaceSearch } from '@/app/lib/hooks/useOlaMaps';
+import { usePlaceSearch } from '@/app/lib/hooks/usePlaceSearch';
 import { debounce } from '@/app/utils/helper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useCallback, useState } from 'react';
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Divider, Surface, Text, TextInput } from 'react-native-paper';
 
 export interface PlaceSearchInputProps {
   placeholder?: string;
-  onPlaceSelected: (placeId: string, description: string) => void;
+  onPlaceSelected: (placeId: string, description: string, lat?: number, lng?: number) => void;
   icon?: string;
   style?: any;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
@@ -23,6 +25,8 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
   onPlaceSelected,
   icon = 'map-marker',
   style,
+  onFocus,
+  onBlur,
 }) => {
   const [query, setQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
@@ -47,11 +51,11 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
     }
   };
 
-  const handlePlaceSelect = (placeId: string, description: string) => {
+  const handlePlaceSelect = (placeId: string, description: string, lat?: number, lng?: number) => {
     setQuery(description);
     setShowResults(false);
     clearResults();
-    onPlaceSelected(placeId, description);
+    onPlaceSelected(placeId, description, lat, lng);
   };
 
   const handleClear = () => {
@@ -67,6 +71,17 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
         value={query}
         onChangeText={handleQueryChange}
         placeholder={placeholder}
+        onFocus={() => {
+          setShowResults(true);
+          if (onFocus) onFocus();
+        }}
+        onBlur={() => {
+          // Delay hiding results to allow item selection
+          setTimeout(() => {
+            setShowResults(false);
+            if (onBlur) onBlur();
+          }, 200);
+        }}
         left={<TextInput.Icon icon={icon} />}
         right={
           query ? (
@@ -78,16 +93,16 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
         style={styles.input}
       />
 
-      {showResults && results && results.predictions.length > 0 && (
+      {showResults && results && results.length > 0 && (
         <Surface style={styles.resultsContainer} elevation={4}>
           <FlatList
-            data={results.predictions}
+            data={results}
             keyExtractor={(item) => item.place_id}
             renderItem={({ item }) => (
               <>
                 <TouchableOpacity
                   style={styles.resultItem}
-                  onPress={() => handlePlaceSelect(item.place_id, item.description)}
+                  onPress={() => handlePlaceSelect(item.place_id, item.description, item.lat, item.lng)}
                 >
                   <MaterialCommunityIcons
                     name="map-marker"
@@ -97,10 +112,10 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
                   />
                   <View style={styles.resultText}>
                     <Text variant="bodyMedium" style={styles.mainText}>
-                      {item.structured_formatting.main_text}
+                      {item.main_text}
                     </Text>
                     <Text variant="bodySmall" style={styles.secondaryText}>
-                      {item.structured_formatting.secondary_text}
+                      {item.secondary_text}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -113,7 +128,7 @@ export const PlaceSearchInput: React.FC<PlaceSearchInputProps> = ({
         </Surface>
       )}
 
-      {showResults && query.length >= 2 && results && results.predictions.length === 0 && !loading && (
+      {showResults && query.length >= 2 && results && results.length === 0 && !loading && (
         <Surface style={styles.resultsContainer} elevation={4}>
           <View style={styles.noResults}>
             <MaterialCommunityIcons name="map-marker-off" size={40} color="#999" />

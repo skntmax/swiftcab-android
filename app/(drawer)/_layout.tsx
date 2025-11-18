@@ -24,7 +24,7 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="(tabs)"
         options={{
-          headerTitle: 'SwiftCab Driver',
+          headerTitle: 'SwiftCab',
           drawerLabel: 'Home',
         }}
       />
